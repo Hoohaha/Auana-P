@@ -1,9 +1,13 @@
 Auana-P Version 0.1
 =======
 
-Audio Analysis Algorithm
+Auana means:Audio Analysis Algorithm.
 This is Auana version0.1
 
+Setup:
+1)install python: numpy sicpy(math tool)
+2)install python: yaml(save data)
+3)install python: pyaudio(record audio or play audio)
 
 Auana-P: Auana algorithm Package.
 
