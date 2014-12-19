@@ -10,13 +10,13 @@ try:
 except ImportError:
 	print("Please build and install the yaml Python ")
 
-autohandle_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 class AuanaBase(object):
 	def __init__(self):
 
 		try:
-			cfile = open(autohandle_directory+'/data/AudioFingerCatalog.yml','r')
+			cfile = open(current_directory+'/data/AudioFingerCatalog.yml','r')
 			self.catalog = yaml.load(cfile)
 		except TypeError:
 			raise ("Please save the audio-fingerprint at first")
@@ -105,13 +105,13 @@ class Fana(AuanaBase):
 				0:get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False),
 				1:get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False)
 				}
-		dfile = open(autohandle_directory+"/data/"+index+".yml", 'w+')
+		dfile = open(current_directory+"/data/"+index+".yml", 'w+')
 		yaml.dump(temp, dfile)
 		dfile.close()
 
 
 		self.catalog.update({self.name:index})
-		cfile = open(autohandle_directory+"/data/AudioFingerCatalog.yml", 'w+')	
+		cfile = open(current_directory+"/data/AudioFingerCatalog.yml", 'w+')	
 		yaml.dump(self.catalog, cfile)
 		cfile.close()
 		print "save Audio-Fingerprint Done"

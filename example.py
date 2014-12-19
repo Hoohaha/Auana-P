@@ -1,37 +1,38 @@
 from auana import Fana
 import os,time
+current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 '''==================save_fingerprint======================'''
 start = time.time()
-Fana("C:/Users/b51762/Desktop/sample/piano.wav").save_fingerprint()
+Fana(current_directory+"/sample/piano.wav").save_fingerprint()
 print time.time()-start
 print " "
 
 start = time.time()
-Fana("C:/Users/b51762/Desktop/sample/source1.wav").save_fingerprint()
+Fana(current_directory+"/sample/ding.wav").save_fingerprint()
 print time.time()-start
 print " "
 
 start = time.time()
-Fana("C:/Users/b51762/Desktop/sample/ding.wav").save_fingerprint()
+Fana(current_directory+"/sample/source1.wav").save_fingerprint()
 print time.time()-start
 print " "
 
 # # start = time.time()
-# Fana("C:/Users/b51762/Desktop/sample/Come And Get Your Love.wav").save_fingerprint()
+# Fana(current_directory+"/sample/Come And Get Your Love.wav").save_fingerprint()
 # print time.time()-start
 # print " "
 
 # '''===================function example====================='''
-# print Fana("C:/Users/b51762/Desktop/music/ding2.wav").stereo_start()
+# print Fana(current_directory+"/sample/piano.wav").stereo_start()
 # print" "
-# print Fana("C:/Users/b51762/Desktop/music/ding.wav").mono_start(0)
+# print Fana(current_directory+"/sample/piano.wav").mono_start(0)
 # print" "
 
 
 '''=========================test==========================='''
 #search .wav file
-dir_audio = 'C:/Users/b51762/Desktop/sample'
+dir_audio = current_directory+"/sample"
 audio_list = []
 file_num = 0
 for parent, dirnames, filenames in os.walk(dir_audio):

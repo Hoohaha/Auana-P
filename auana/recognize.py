@@ -2,7 +2,7 @@
 import numpy as np
 # import scipy.signal as signal
 import time,os,yaml
-autohandle_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 #How many data in fft process 
 DEFAULT_FFT_SIZE = 4096
 #Sub-fingerprint bit depth
@@ -56,7 +56,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	tlen           = tdata.shape[-1]
 	
 	def reference_data(index):
-		dfile = open(autohandle_directory+"/data/"+index+".yml","r")
+		dfile = open(current_directory+"/data/"+index+".yml","r")
 		sdata = np.array(yaml.load(dfile)[channel],dtype = np.uint32)
 		dfile.close()
 		return sdata
