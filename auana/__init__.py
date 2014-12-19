@@ -6,10 +6,6 @@ try:
 except ImportError:
 	print("Please build and install the numpy Python ")
 try:
-	import scipy.signal as signal
-except ImportError:
-	print("Please build and install the scipy Python ")
-try:
 	import yaml
 except ImportError:
 	print("Please build and install the yaml Python ")
@@ -18,41 +14,54 @@ autohandle_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','
 
 class AuanaBase(object):
 	def __init__(self):
+
 		try:
-			source_data = open(autohandle_directory+'/AudioFingerData.yml','r')
-			self.sdata = yaml.load(source_data)
-		except None:
-			print "Please save the audio-fingerprint in AudioFingerData.yml"
+			cfile = open(autohandle_directory+'/data/AudioFingerCatalog.yml','r')
+			self.catalog = yaml.load(cfile)
+		except TypeError:
+			raise ("Please save the audio-fingerprint at first")
 			return
-		source_data.close()
+		cfile.close()
+
 	def __del__(self):
 		pass
-	
-	def mono(self,wdata,channel,framerate):
-		audio_name, confidence,avgdb=recognize(wdata,self.sdata,channel,framerate)
-		broframe=detect_broken_frame(wdata, channel,framerate)
-		return {channel:{"broken_frame":broframe,"name":audio_name,"confidence":confidence,"average_db":avgdb}}
+
+	def mono(self,wdata,channel,framerate,quick=None):
+		start = time.time()
+		audio_name, confidence,avgdb=recognize(self.catalog,wdata,framerate,channel,quick)
+		broframe=detect_broken_frame(wdata, framerate)
+		print "time:",time.time()-start
+		return {"name":audio_name,"broken_frame":broframe,"confidence":confidence,"average_db":avgdb}
 
 	def stereo(self,wdata0,wdata1,framerate):
-		result={} 
-		result.update(self.mono(wdata0,0,framerate))
-		result.update(self.mono(wdata1,1,framerate))
+		result={0:"",1:""} 
+		result[0] = self.mono(wdata0,0,framerate)
+
+		if result[0]["name"] is not None:
+			result[1]=self.mono(wdata1,1,framerate,quick=result[0]["name"])
+		else:
+			result[1]={"name":None,"broken_frame":0,"confidence":0,"average_db":0}
 
 		average_db = int((result[1]["average_db"]+result[1]["average_db"])/2)
 		confidence = round((result[0]["confidence"]+result[1]["confidence"])/2,3)
 		
-		for channels in  xrange(2):
-			if result[channels]["broken_frame"]!=0:
+		if result[0]["broken_frame"]!=0 and result[1]["broken_frame"]!=0:
+			for channels in  xrange(2):
 				print "+----------"
 				print "| channel:%d, detect a broken frame, in time:"%channels, result[channels]["broken_frame"]
 				print "+----------"
-				return "Broken Frame",0,average_db
-		if (result[0]["name"]!=None) and (result[0]["name"] == result[1]["name"]):
+			return "Broken Frame",0,average_db
+
+		elif (result[0]["name"]!=None) and (result[0]["name"] == result[1]["name"]):
 			return result[0]["name"],confidence,average_db
+
 		else:
 			return "Not Found",0,average_db
 
-class FileAnalysis(AuanaBase):
+class Fana(AuanaBase):
+	'''
+	Fana: File Analysis
+	'''
 	def __init__(self,filepath):	
 		AuanaBase.__init__(self)
 		#open wav file
@@ -78,28 +87,67 @@ class FileAnalysis(AuanaBase):
 		return self.mono(data[channel],channel,self.framerate)
 
 	def save_fingerprint(self):
+		'''
+		catalog = {Audio: 
+
+		}
+		'''
 		try:
-			yaml_data = open(autohandle_directory+"/AudioFingerData.yml", 'r+')	
-			catalog = yaml.load(yaml_data)
-		except None:
-			catalog ={}
-		for key in catalog:
-			if self.name == key:
-				yaml_data.close()
+			if self.catalog.has_key(self.name):
 				print "saved before"
 				return
-		
-		temp={self.name:{
-				0:get_fingerprint(wdata=self.wdata0,framerate=self.framerate),
-				1:get_fingerprint(wdata=self.wdata1,framerate=self.framerate)
-				}
-			}
+		except AttributeError:
+			self.catalog ={}
 
-		try:
-			yaml_data = open(autohandle_directory+"/AudioFingerData.yml", 'w+')
-			catalog.update(temp)
-			yaml.dump(catalog, yaml_data)
-		finally:
-			yaml_data.close()
+		index = str(len(self.catalog))
+
+		temp={
+				0:get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False),
+				1:get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False)
+				}
+		dfile = open(autohandle_directory+"/data/"+index+".yml", 'w+')
+		yaml.dump(temp, dfile)
+		dfile.close()
+
+
+		self.catalog.update({self.name:index})
+		cfile = open(autohandle_directory+"/data/AudioFingerCatalog.yml", 'w+')	
+		yaml.dump(self.catalog, cfile)
+		cfile.close()
 		print "save Audio-Fingerprint Done"
 
+def MicAnalyis(AuanaBase):
+	def __init__(self):
+		AuanaBase.__init__(self)
+
+		CHUNK         = 4096
+		FORMAT        = paInt16
+		CHANNELS      = 2
+		SAMPLING_RATE = 44100
+
+		#open audio stream
+		pa = PyAudio()
+		stream = pa.open(
+						format   = FORMAT, 
+						channels = CHANNELS, 
+						rate     = SAMPLING_RATE, 
+						input    = True,
+						frames_per_buffer  = CHUNK
+						)
+
+	def __del__(self):
+		pass
+	def satrt(self):
+		pass
+
+	def stop(self):
+		pass
+	def record(self):
+		while True:
+			queue.put(stream.read(CHUNK))
+	def volume(self):
+		data = queue.get()
+		xs   = np.multiply(data, signal.hann(DEFAULT_FFT_SIZE, sym=0))
+		#fft transfer
+		xfp  = 20*np.log10(np.abs(np.fft.rfft(xs)))
+		db   = np.sum(xfp[0:200])/200

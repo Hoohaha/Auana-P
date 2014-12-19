@@ -1,7 +1,37 @@
-from auana import FileAnalysis
-import os
+from auana import Fana
+import os,time
 
-dir_audio = 'C:/audio/twrk24f120m/kds/Debug'
+'''==================save_fingerprint======================'''
+start = time.time()
+Fana("C:/Users/b51762/Desktop/sample/piano.wav").save_fingerprint()
+print time.time()-start
+print " "
+
+start = time.time()
+Fana("C:/Users/b51762/Desktop/sample/source1.wav").save_fingerprint()
+print time.time()-start
+print " "
+
+start = time.time()
+Fana("C:/Users/b51762/Desktop/sample/ding.wav").save_fingerprint()
+print time.time()-start
+print " "
+
+# # start = time.time()
+# Fana("C:/Users/b51762/Desktop/sample/Come And Get Your Love.wav").save_fingerprint()
+# print time.time()-start
+# print " "
+
+# '''===================function example====================='''
+# print Fana("C:/Users/b51762/Desktop/music/ding2.wav").stereo_start()
+# print" "
+# print Fana("C:/Users/b51762/Desktop/music/ding.wav").mono_start(0)
+# print" "
+
+
+'''=========================test==========================='''
+#search .wav file
+dir_audio = 'C:/Users/b51762/Desktop/sample'
 audio_list = []
 file_num = 0
 for parent, dirnames, filenames in os.walk(dir_audio):
@@ -13,12 +43,11 @@ for parent, dirnames, filenames in os.walk(dir_audio):
 			audio_list.append(path)
 			file_num += 1
 
-print FileAnalysis("E:\FreeKV_demo/FreeKV_demo/auto_handle\sai_demo/audio_lib/source1.wav").stereo_start()
-print FileAnalysis("E:\FreeKV_demo/FreeKV_demo/auto_handle\sai_demo/audio_lib/source2.wav").mono_start(0)
-FileAnalysis("E:\FreeKV_demo/FreeKV_demo/auto_handle\sai_demo/audio_lib/source2.wav").save_fingerprint()
-# for a in  xrange(0,len(audio_list)):#
-# 	start = time.time()
-# 	print audio_list[a]
-# 	print auana(audio_list[a],False)
-# 	print "Finished time: %4f"%(time.time()-start)
-# 	print " "
+#start to handle
+for a in  xrange(0,len(audio_list)):#
+	start = time.time()
+	print audio_list[a]
+	print Fana(audio_list[a]).stereo_start()
+	print "Finished time: %.3f"%(time.time()-start)
+	print " "
+del Fana
