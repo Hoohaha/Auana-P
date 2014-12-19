@@ -5,7 +5,7 @@ Auana-P: Auana algorithm Package.
 Auana means:Audio Analysis Algorithm.
 This is Auana version0.1
 
-Setup:
+!!Setup:
 =======
 1)install python: numpy sicpy(math tool)
 2)install python: yaml(save data)
