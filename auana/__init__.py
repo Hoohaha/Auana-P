@@ -1,63 +1,76 @@
 from recognize import recognize,get_fingerprint
 from broframe import detect_broken_frame
 import wave, time, os, re
+import cPickle as pickle
 try:
 	import numpy as np
 except ImportError:
 	print("Please build and install the numpy Python ")
-try:
-	import yaml
-except ImportError:
-	print("Please build and install the yaml Python ")
 
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 class AuanaBase(object):
+
 	def __init__(self):
 
 		try:
-			cfile = open(current_directory+'/data/AudioFingerCatalog.yml','r')
-			self.catalog = yaml.load(cfile)
-		except TypeError:
-			raise ("Please save the audio-fingerprint at first")
-			return
+			cfile = open(current_directory+'/data/AudioFingerCatalog.pkl', 'rb')
+			self.catalog = pickle.load(cfile)
+		except EOFError:
+			self.catalog = {}
 		cfile.close()
 
 	def __del__(self):
 		pass
 
 	def mono(self,wdata,channel,framerate,quick=None):
-		start = time.time()
+		'''
+		To improve the speed of recognition, we use the "quick" to do it.
+		If it matched an audio(example "source1.wav") in channel0, when search in channel1 we will directly
+		compare the matched audio("source1.wav"), rather than search all reference file again. 
+		'''
+		if len(self.catalog)==0:
+			print("Error: No data saved in pkl file." 
+				"Please fisrtly save the fingerprint of the reference audio.")
+			time.sleep(5)
+			os._exit(1)
+
+		#audio recognition
 		audio_name, confidence,avgdb=recognize(self.catalog,wdata,framerate,channel,quick)
+		#broken frame detection
 		broframe=detect_broken_frame(wdata, framerate)
-		print "time:",time.time()-start
+
 		return {"name":audio_name,"broken_frame":broframe,"confidence":confidence,"average_db":avgdb}
 
 	def stereo(self,wdata0,wdata1,framerate):
-		result={0:"",1:""}
+		channel0 = 0
+		channel1 = 1
+
+		result={channel0:"",channel1:""}
 
 		#Analyze the channel0 first. 
-		result[0] = self.mono(wdata0,0,framerate)
+		result[channel0] = self.mono(wdata0,channel0,framerate)
+
 		#Analyze the channel1.
-		if result[0]["name"] is not None:
+		if result[channel0]["name"] is not None:
 			#'quick'means quick recognition.
-			result[1]=self.mono(wdata1,1,framerate,quick=result[0]["name"])
+			result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
 		else:
-			result[1]={"name":None,"broken_frame":0,"confidence":0,"average_db":0}
+			result[channel1]={"name":None,"broken_frame":0,"confidence":0,"average_db":0}
 
 		#handle the result from channel0 and channel1.
-		average_db = int((result[1]["average_db"]+result[1]["average_db"])/2)
-		confidence = round((result[0]["confidence"]+result[1]["confidence"])/2,3)
+		average_db = round((result[channel0]["average_db"]+result[channel1]["average_db"])/2,1)
+		confidence = round((result[channel0]["confidence"]+result[channel1]["confidence"])/2,3)
 		
-		if result[0]["broken_frame"]!=0 and result[1]["broken_frame"]!=0:
+		if result[channel0]["broken_frame"]!=0 and result[channel1]["broken_frame"]!=0:
 			for channels in  xrange(2):
 				print "+----------"
 				print "| channel:%d, detect a broken frame, in time:"%channels, result[channels]["broken_frame"]
 				print "+----------"
 			return "Broken Frame",0,average_db
 
-		elif (result[0]["name"]!=None) and (result[0]["name"] == result[1]["name"]):
-			return result[0]["name"],confidence,average_db
+		elif (result[channel0]["name"]!=None) and (result[channel0]["name"] == result[channel1]["name"]):
+			return result[channel1]["name"],confidence,average_db
 
 		else:
 			return "Not Found",0,average_db
@@ -92,32 +105,30 @@ class Fana(AuanaBase):
 
 	def save_fingerprint(self):
 		'''
-		catalog = {Audio:}
+		catalog = {"sample.wav":index}
 		'''
 		#judge the file if saved before.
-		try:
-			if self.catalog.has_key(self.name):
-				print "saved before"
-				return
-		except AttributeError:
-			self.catalog ={}
+		if self.catalog.has_key(self.name):
+			print "%s saved before"%self.name
+			return
 
 		index = str(len(self.catalog))
 
-		#compute the fingerprint
-		temp={
-				0:get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False),
-				1:get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False)
-				}
-		#save data
-		dfile = open(current_directory+"/data/"+index+".yml", 'w+')
-		yaml.dump(temp, dfile)
+		#creat .bin file
+		dfile = open(current_directory+"/data/"+index+".bin", 'w+')
 		dfile.close()
+
+		#compute the fingerprint and save it
+		temp = []
+		temp.append(get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False))
+		temp.append(get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False))
+		temp=np.array(temp,dtype=np.uint32)
+		temp.tofile(current_directory+"/data/"+index+".bin")
 
 		#save index
 		self.catalog.update({self.name:index})
-		cfile = open(current_directory+"/data/AudioFingerCatalog.yml", 'w+')	
-		yaml.dump(self.catalog, cfile)
+		cfile = open(current_directory+'/data/AudioFingerCatalog.pkl', 'w+')	
+		pickle.dump(self.catalog, cfile)
 		cfile.close()
 		print "save Audio-Fingerprint Done"
 

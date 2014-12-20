@@ -1,7 +1,7 @@
 #Auther: Halye Guo  Date:2014/12
 import numpy as np
 # import scipy.signal as signal
-import time,os,yaml
+import os
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 #How many data in fft process, this value must be 2^n. 
@@ -45,21 +45,21 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 
 	Data storage format
 	----------
-	AudioFingerCatalog.yaml       	Save reference audio fingerprint index.
-	0.yml                        	Index:0, data
-	1.yaml 							Index:1, data
+	AudioFingerCatalog.pkl       	Save reference audio fingerprint index.
+	0.bin                        	Index:0, data
+	1.bin							Index:1, data
 	...                        		...
 
-	AudioFingerCatalog.yml
-	   	{
-	   	'sample0.wav':index0,
-	   	'sample1.wav':index1,
-	   			...
-	   	'samplen.wav':indexn
-	   	}
+				AudioFingerCatalog.pkl
+				   	{
+				   	'sample0.wav':index0,
+				   	'sample1.wav':index1,
+				   			...
+				   	'samplen.wav':indexn
+				   	}
 
-	index0.yml
-		{channel0:data,channel1:data}
+				index0.yml
+					{channel0:data,channel1:data}
 
 	Process
 	----------
@@ -84,24 +84,22 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 
 		Returns
 	    ----------
-		sdata: source data.                				 Type:[dic]
-
+		sdata: source data.                				 Type:[array]
 		'''
-		dfile = open(current_directory+"/data/"+index+".yml","r")
-		sdata = np.array(yaml.load(dfile)[channel],dtype = np.uint32)
-		dfile.close()
-		return sdata
+		sdata = np.fromfile(current_directory+"/data/"+index+".bin",dtype=np.uint32)
+		sdata.shape = 2,-1
+		return sdata[channel]
 	
 	if quick is not None:
-		index=catalog[quick]
+		index = catalog[quick]
 		sdata = get_reference_data(index)
 		confidence = find_match(sdata,tdata,tlen)
-		if confidence > 0.2:
+		if confidence > 0.1:
 			match_audio = quick
 			max_confidence = confidence
 	else:
 		for audio in catalog:
-			index=catalog[audio]
+			index = catalog[audio]
 			sdata = get_reference_data(index)
 
 			confidence = find_match(sdata,tdata,tlen)
@@ -137,8 +135,6 @@ def find_match(sdata,tdata,tlen):
 	|-----win1------|-----win2-----|---------
 	-----------------------------------------
 
-
-
 	In oder to improve efficiency, there are several ways:
 		1) the section that have matched, we not search it in next window,
 			so we use the variable: next_begain 
@@ -155,7 +151,7 @@ def find_match(sdata,tdata,tlen):
 		window_size = 20
 
 	next_begain = 0
-	max_index = len(sdata)-window_size
+	max_index = sdata.shape[-1]-window_size
 	
 	threshold = window_size*32*0.283
 	
@@ -174,7 +170,7 @@ def find_match(sdata,tdata,tlen):
 			#calculate the distant of each subfingerprint between two songs
 			D = tdata[tsta : tend] ^ sdata[index : index+window_size]
 			#get distant of two search-windows
-			dis = np.sum([hamming_weight(long(d)) for d in D])
+			dis = np.sum(np.array([hamming_weight(long(d)) for d in D]))
 			if dis <= dismin :
 				dismin  = dis
 				min_seq = index
@@ -201,7 +197,7 @@ def get_fingerprint(wdata,framerate,db=True):
 	For 5sec files, the overlap is 3/4, others is 1/2.
 	'''
 	global DEFAULT_OVERLAP
-	data_len = len(wdata)
+	data_len = wdata.shape[-1]
 	#Overlap frmate depth
 	if data_len<300000:#(5s)
 		DEFAULT_OVERLAP = 4
@@ -257,10 +253,11 @@ def get_fingerprint(wdata,framerate,db=True):
 				subfin = subfin | (1<<(n-1))
 		fin.append(subfin)
 
+	fin = np.array(fin,dtype = np.uint32)
 	#fin:the file`s fingerprint
 	#sumdb/num:the average volume of the file`s
 	if db is True:
- 		return np.array(fin,dtype = np.uint32),sumdb/num
+ 		return fin,sumdb/num
  	else:
  		return fin
 # def fft_transfer():
