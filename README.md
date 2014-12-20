@@ -8,9 +8,19 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 
 ###Setup:
 -----------------------------------
-1) Firstly, install python: numpy sicpy(math tool)<br>
-2) Besides, install pyaudio (record audio or play audio)<br>
+1) Firstly, install python: numpy and sicpy(math tool)<br>
+2) Besides, install pyaudio (record audio or play audio)[option]<br>
 
+###Features:
+-----------------------------------
+1.Broken-frame detection                                      [support]<br>
+2.Sound recognition                                           [support]<br>
+3.Volume value detection                                      [support]<br>
+4.Signal noise ratio detection                                [will]<br>
+5.Real time detection and analysis                            [will]<br>
+6.Support mp3 ,wma…etc                                        [will]<br>
+7.Detect the sound error caused by device clock frequency     [will]<br>
+8.Detect noise                                                [will]<br>
 
 
 ###How to use it to analysis a wave file?
