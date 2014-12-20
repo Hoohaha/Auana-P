@@ -3,11 +3,6 @@ import os,time
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 '''==================save_fingerprint======================'''
-start = time.clock()
-Fana(current_directory+"/sample/piano.wav").save_fingerprint()
-print time.clock()-start
-print " "
-
 start = time.time()
 Fana(current_directory+"/sample/ding.wav").save_fingerprint()
 print time.time()-start
@@ -18,9 +13,14 @@ Fana(current_directory+"/sample/source1.wav").save_fingerprint()
 print time.time()-start
 print " "
 
-# start = time.time()
+start = time.clock()
+Fana(current_directory+"/sample/piano.wav").save_fingerprint()
+print time.clock()-start
+print " "
+
+start = time.clock()
 Fana(current_directory+"/sample/Come And Get Your Love.wav").save_fingerprint()
-print time.time()-start
+print time.clock()-start
 print " "
 
 # '''===================function example====================='''

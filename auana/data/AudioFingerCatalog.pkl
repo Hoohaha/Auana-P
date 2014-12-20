@@ -1,14 +1,14 @@
 (dp1
 S'ding.wav'
 p2
-S'1'
+S'0'
 sS'Come And Get Your Love.wav'
 p3
 S'3'
 sS'source1.wav'
 p4
-S'2'
+S'1'
 sS'piano.wav'
 p5
-S'0'
+S'2'
 s.
