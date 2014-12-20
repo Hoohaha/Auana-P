@@ -6,22 +6,22 @@ Auana means:Audio Analysis Algorithm.
 This is Auana version0.1
 
 Setup:
-=======
-1)install python: numpy sicpy(math tool)
-2)install python: yaml(save data)
-3)install python: pyaudio(record audio or play audio)
+-----------------------------------
+1)install python: numpy sicpy(math tool)<br>
+2)install python: yaml(save data)<br>
+3)install python: pyaudio(record audio or play audio)<br>
 
 
 
-Changes:
-=======
-1)Resconstruct the code.
-2)Update the broken-frame issue.
-3)Improve the Accuracy of recognition.
-4)Fix some bugs.
+###Changes:
+-----------------------------------
+1)Resconstruct the code.<br>
+2)Update the broken-frame issue.<br>
+3)Improve the Accuracy of recognition.<br>
+4)Fix some bugs.<br>
 
-How to use it to analysis a wave file?
-=======
-For example:
-from auana import FileAnalysis
-FileAnalysis("sample.wav").stereo_start()
+###How to use it to analysis a wave file?
+-----------------------------------
+For example:<br>
+from auana import FileAnalysis<br>
+FileAnalysis("sample.wav").stereo_start()<br>
