@@ -16,5 +16,7 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 ###How to use it to analysis a wave file?
 -----------------------------------
     For example:<br>
-              from auana import FileAnalysis
-              FileAnalysis("sample.wav").stereo_start()
+              from auana import Fana
+              Fana("sample.wav").save_fingerprint#save the fingerprint of audio
+              Fana("sample.wav").mono_start()#mono analyze
+              Fana("sample.wav").stereo_start()#stereo analyze
