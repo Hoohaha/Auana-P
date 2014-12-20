@@ -2,6 +2,16 @@ import numpy as np
 
 def detect_broken_frame(wdata,framerate):
 	'''
+	To detect broken frame.
+
+	Parameters
+    ----------
+	wdata: wave data          					Type:[array]
+	framerate: sample rate.    					Type:[int]
+
+	Returns
+    ----------
+    bf: broken frame                          	Type:[list]
 	 _______ _______           
 	|		|		|
 	|		|		|		

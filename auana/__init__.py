@@ -1,6 +1,6 @@
 from recognize import recognize,get_fingerprint
 from broframe import detect_broken_frame
-import wave, time, os,re
+import wave, time, os, re
 try:
 	import numpy as np
 except ImportError:
@@ -34,14 +34,18 @@ class AuanaBase(object):
 		return {"name":audio_name,"broken_frame":broframe,"confidence":confidence,"average_db":avgdb}
 
 	def stereo(self,wdata0,wdata1,framerate):
-		result={0:"",1:""} 
-		result[0] = self.mono(wdata0,0,framerate)
+		result={0:"",1:""}
 
+		#Analyze the channel0 first. 
+		result[0] = self.mono(wdata0,0,framerate)
+		#Analyze the channel1.
 		if result[0]["name"] is not None:
+			#'quick'means quick recognition.
 			result[1]=self.mono(wdata1,1,framerate,quick=result[0]["name"])
 		else:
 			result[1]={"name":None,"broken_frame":0,"confidence":0,"average_db":0}
 
+		#handle the result from channel0 and channel1.
 		average_db = int((result[1]["average_db"]+result[1]["average_db"])/2)
 		confidence = round((result[0]["confidence"]+result[1]["confidence"])/2,3)
 		
@@ -88,10 +92,9 @@ class Fana(AuanaBase):
 
 	def save_fingerprint(self):
 		'''
-		catalog = {Audio: 
-
-		}
+		catalog = {Audio:}
 		'''
+		#judge the file if saved before.
 		try:
 			if self.catalog.has_key(self.name):
 				print "saved before"
@@ -101,21 +104,24 @@ class Fana(AuanaBase):
 
 		index = str(len(self.catalog))
 
+		#compute the fingerprint
 		temp={
 				0:get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False),
 				1:get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False)
 				}
+		#save data
 		dfile = open(current_directory+"/data/"+index+".yml", 'w+')
 		yaml.dump(temp, dfile)
 		dfile.close()
 
-
+		#save index
 		self.catalog.update({self.name:index})
 		cfile = open(current_directory+"/data/AudioFingerCatalog.yml", 'w+')	
 		yaml.dump(self.catalog, cfile)
 		cfile.close()
 		print "save Audio-Fingerprint Done"
 
+#developing...
 def MicAnalyis(AuanaBase):
 	def __init__(self):
 		AuanaBase.__init__(self)

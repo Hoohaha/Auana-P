@@ -3,13 +3,14 @@ import numpy as np
 # import scipy.signal as signal
 import time,os,yaml
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-#How many data in fft process 
+
+#How many data in fft process, this value must be 2^n. 
 DEFAULT_FFT_SIZE = 4096
 #Sub-fingerprint bit depth
 FIN_BIT = 32
-#mel frequency
+#Mel frequency
 mel = (2596*np.log10(1+4000/700.0))/(FIN_BIT+1.0)
-#save the sub-band of upper and lower bounds 
+#The upper and lower bounds of sub-band. 
 BandTable = {1: [0  ,   8],  2: [4  ,  12],  3: [8  ,  17],  4: [12 ,  22], 
 			 5: [17 ,  27],  6: [22 ,  32],  7: [27 ,  38],  8: [32 ,  44],
 			 9: [38 ,  51], 10: [44 ,  58], 11: [51 ,  65], 12: [58 ,  73], 
@@ -23,29 +24,47 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	'''
 	This function is audio recognition.
 	
-	Compute the file is same with which reference-audio.
+	Compare the target data and source data weather it is same.
 	And give the accuracy of recognition and average volume.
-	The accuracy is measured by confidence value. The more similar, and the value is more
-	close to "1".
+	The accuracy is measured by variable: confidence. 
+	The more similar, and the confidence is more close to "1".
 
 	Volume is measured by db.
 
 	Parameters
     ----------
-	wdata: wave data
-	sdata: source data(reference data)
-	framerate: wave file sample rate
+	wdata: wave data                                Type:[array]
+	sdata: source data(reference data)				Type:[list]
+	framerate: sample rate							Type:[int]
 
 	Returns
     ----------
-	match_audio: matched audio name which saved in reference file [AudioFingerData.yml].
-	max_confidence: accuracy
-	avgdb: average volume
+	match_audio: the real audio name.                Type:[string]
+	max_confidence: accuracy						 Type:[float]
+	avgdb: average Volume                            Type:[float]
+
+	Data storage format
+	----------
+	AudioFingerCatalog.yaml       	Save reference audio fingerprint index.
+	0.yml                        	Index:0, data
+	1.yaml 							Index:1, data
+	...                        		...
+
+	AudioFingerCatalog.yml
+	   	{
+	   	'sample0.wav':index0,
+	   	'sample1.wav':index1,
+	   			...
+	   	'samplen.wav':indexn
+	   	}
+
+	index0.yml
+		{channel0:data,channel1:data}
 
 	Process
 	----------
 	step1: get the fingerprint of wave data
-	step2: compare the fingerprint with the sdata, 
+	step2: compare the target fingerprint with the sdata, 
 		   and return the confidence(accuarce) and matched audio name.
 		   confidence: 0~1, it means the how many fingerprint matched in reference file.
 	'''
@@ -55,7 +74,19 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	match_audio    = None
 	tlen           = tdata.shape[-1]
 	
-	def reference_data(index):
+	def get_reference_data(index):
+		'''
+		This function load data acorrding the index.
+
+		Parameters
+	    ----------
+		index: the index of the reference file.          Type:[int]
+
+		Returns
+	    ----------
+		sdata: source data.                				 Type:[dic]
+
+		'''
 		dfile = open(current_directory+"/data/"+index+".yml","r")
 		sdata = np.array(yaml.load(dfile)[channel],dtype = np.uint32)
 		dfile.close()
@@ -63,7 +94,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	
 	if quick is not None:
 		index=catalog[quick]
-		sdata = reference_data(index)
+		sdata = get_reference_data(index)
 		confidence = find_match(sdata,tdata,tlen)
 		if confidence > 0.2:
 			match_audio = quick
@@ -71,7 +102,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	else:
 		for audio in catalog:
 			index=catalog[audio]
-			sdata = reference_data(index)
+			sdata = get_reference_data(index)
 
 			confidence = find_match(sdata,tdata,tlen)
 			#filter: if confidence more than 50%, that is to say the it is same with the reference
@@ -89,14 +120,25 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 #######################################################
 def find_match(sdata,tdata,tlen):
 	'''
-	Compute which the audio is same with the target wave file.
+	Find the similar audio with target data.
 
-	minseq:  means the number of matched window in reference
-	min_seq0: the last of minseqss
+	Parameters
+    ----------
+	sdata: source data(reference data)          Type:[array]
+	tdata: target data from target wav file.    Type:[array]
+	tlen: the length of tdata                   Type:[int]
+
+	Returns
+    ----------
+    confidence: 0~100%                          Type:[float]
+
+
 	-----------------------------------------
 	|-----win1------|-----win2-----|---------
 	-----------------------------------------
-	confidence:
+
+
+
 	In oder to improve efficiency, there are several ways:
 		1) the section that have matched, we not search it in next window,
 			so we use the variable: next_begain 
@@ -240,7 +282,7 @@ def hamming_weight(x):
 def _hann(M, sym=True):
 	'''
 	hanning window.
-	In order to simplify the application, this function is come from scipy.signal
+	In order to simplify the application, this function come from scipy.signal.
 	'''
 	# Docstring adapted from NumPy's hanning function
 	if M < 1:
