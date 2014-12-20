@@ -1,4 +1,4 @@
-Auana-P ###Version 0.1
+Auana-P Version 0.1
 =======
 
 Auana-P: Auana algorithm Package.<br>
@@ -16,5 +16,5 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 ###How to use it to analysis a wave file?
 -----------------------------------
     For example:<br>
-              from auana import FileAnalysis<br>
-              FileAnalysis("sample.wav").stereo_start()<br>
+              from auana import FileAnalysis
+              FileAnalysis("sample.wav").stereo_start()
