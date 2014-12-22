@@ -51,6 +51,7 @@ def detect_broken_frame(wdata,framerate):
 				distance1 = var1-var
 				if (distance0 > VAR_THRESHOLD) and (distance1 > VAR_THRESHOLD) and (var < 90) :
 					FLAG = 1
+					bftime = round(((i+1-1) * DETECT_WIN)/float(framerate),3)
 					# print "U",distance0,distance1
 			elif FLAG == 1:
 				distance0 = var - var0
@@ -58,7 +59,7 @@ def detect_broken_frame(wdata,framerate):
 				if (distance0 >VAR_THRESHOLD) and (distance1 > VAR_THRESHOLD) and (var0 < 90):
 					# print "F",distance0,distance1
 					FLAG = 0
-					bf.append(round(((i+1-1) * DETECT_WIN)/float(framerate),3))
+					bf.append(bftime)
 				#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
 				elif i%860 == 0:
 					FLAG = 0
