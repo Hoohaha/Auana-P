@@ -56,7 +56,7 @@ class AuanaBase(object):
 			#'quick'means quick recognition.
 			result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
 		else:
-			result[channel1]={"name":None,"broken_frame":0,"confidence":0,"average_db":0}
+			result[channel1]={"name":None,"broken_frame":0,"confidence":0,"average_db":result[channel0]["average_db"]}
 
 		#handle the result from channel0 and channel1.
 		average_db = round((result[channel0]["average_db"]+result[channel1]["average_db"])/2,1)
@@ -110,7 +110,7 @@ class Fana(AuanaBase):
 		#judge the file if saved before.
 		if self.catalog.has_key(self.name):
 			print "%s saved before"%self.name
-			return
+			return "continue.."
 
 		index = str(len(self.catalog))
 

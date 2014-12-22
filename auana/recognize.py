@@ -185,7 +185,7 @@ def find_match(sdata,tdata,tlen):
 		#filter:if search done,stop
 		if next_begain >= max_index:break
 		#filter:if confidence is too low,stop
-		if a>stop_condition and confidence<3:return 0
+		if a>stop_condition and confidence<4:return 0
 
 	return round(float(confidence)/(tlen/window_size-1), 3)
 

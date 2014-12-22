@@ -18,10 +18,10 @@ Fana(current_directory+"/sample/piano.wav").save_fingerprint()
 print time.clock()-start
 print " "
 
-start = time.clock()
-Fana(current_directory+"/sample/Come And Get Your Love.wav").save_fingerprint()
-print time.clock()-start
-print " "
+# start = time.clock()
+# Fana(current_directory+"/sample/Come And Get Your Love.wav").save_fingerprint()
+# print time.clock()-start
+# print " "
 
 # '''===================function example====================='''
 # print Fana(current_directory+"/sample/piano.wav").stereo_start()
