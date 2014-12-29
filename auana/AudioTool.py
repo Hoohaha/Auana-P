@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from pyaudio import PyAudio, paInt16
-import wave, os
+import wave, os,time
 
-def Audio_record_play(seconds,play,filename):
+def AudioRecordPlay(seconds,play=False,file_play_path=None,file_save_path=None):
     '''
     This function include record and play, if you want to play and record,
     please set the play is True.
@@ -18,23 +18,20 @@ def Audio_record_play(seconds,play,filename):
     save_buffer = []
 
     if play is True:
-        source_file = autohandle_directory + '/audio_lib/'+'source1.wav'
-        swf = wave.open(source_file, 'rb')
+        swf = wave.open(file_play_path, 'rb')
     
     #open audio stream
     pa = PyAudio()
-    default_input = pa.get_default_host_api_info().get('defaultInputDevice')
+
     stream = pa.open(
                     format   = FORMAT, 
                     channels = CHANNELS, 
                     rate     = SAMPLING_RATE, 
                     input    = True,
                     output   = play,
-                    frames_per_buffer  = CHUNK,
-                    input_device_index = default_input
+                    frames_per_buffer  = CHUNK
                     )
-
-    logging.info(">> START TO RECORD AUDIO")
+    print time.clock(),"start to record."
     while NUM:
         save_buffer.append(stream.read(CHUNK))
         NUM -= 1
@@ -42,7 +39,8 @@ def Audio_record_play(seconds,play,filename):
             data = swf.readframes(CHUNK)
             stream.write(data)
             if data == " ": break
-
+    if play is True:
+        swf.close()
     #close stream
     stream.stop_stream()
     stream.close()
@@ -57,12 +55,12 @@ def Audio_record_play(seconds,play,filename):
         wf_save.writeframes("".join(data))
         wf_save.close()
 
-    save_wave_file(filename, save_buffer)
+    save_wave_file(file_save_path, save_buffer)
 
     del save_buffer[:]
     
 
-def Audio_play(filepath):
+def AudioPlay(filepath):
     '''
     play audio
     '''
@@ -88,3 +86,6 @@ def Audio_play(filepath):
     stream.close()
     del data
     pa.terminate()
+
+# if __name__ == '__main__':
+#     AudioRecordPlay(seconds=2,play=False,file_play_path=None,file_save_path="E:/1.wav")

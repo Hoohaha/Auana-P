@@ -146,46 +146,47 @@ def find_match(sdata,tdata,tlen):
 	confidence=0
 	
 	if tlen < 200:
-		window_size = 2
+		window_size = 6
 	else:
 		window_size = 20
 
 	next_begain = 0
 	max_index = sdata.shape[-1]-window_size
+	# print tlen/window_size
+	stop_condition = 10
+	
+	threshold = window_size*FIN_BIT*0.3
 
-	stop_condition = (tlen/window_size)/3
-	
-	threshold = window_size*32*0.283
-	
 	#Arithmetic sequence tolerance uplimit and down limit
 	up_limit = window_size+2
 	dw_limit = window_size-2
 
-	for a in  xrange(0,tlen/window_size):#tarhet file
-		
+	for a in  xrange(0,tlen/window_size):#target file
+
 		tsta     = a*window_size
 		tend     = (a+1)*window_size
-		dismin   = threshold
+		dismin   = 300
 		min_seq0 = min_seq
 
-		for index in  xrange(next_begain, max_index,2):#reference file
+		for index in  xrange(next_begain, max_index,3):#reference file
 			#calculate the distant of each subfingerprint between two songs
 			D = tdata[tsta : tend] ^ sdata[index : index+window_size]
 			#get distant of two search-windows
 			dis = np.sum(np.array([hamming_weight(long(d)) for d in D]))
+
 			if dis <= dismin :
 				dismin  = dis
 				min_seq = index
-				if window_size>10 and dismin < 90:break
+				if window_size>10 and dismin < 100:break
 
 		#filter:block distance is very close, and they are Arithmetic sequence
-		if dw_limit<=min_seq-min_seq0<=up_limit:
+		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
 			confidence += 1
 			next_begain = min_seq
 		#filter:if search done,stop
 		if next_begain >= max_index:break
 		#filter:if confidence is too low,stop
-		if a>stop_condition and confidence<4:return 0
+		if a>stop_condition and confidence<2:return 0
 
 	return round(float(confidence)/(tlen/window_size-1), 3)
 
@@ -201,12 +202,9 @@ def get_fingerprint(wdata,framerate,db=True):
 	global DEFAULT_OVERLAP
 	data_len = wdata.shape[-1]
 	#Overlap frmate depth
-	if data_len<300000:#(5s)
-		DEFAULT_OVERLAP = 4
-	else:
-		DEFAULT_OVERLAP = 2
+	DEFAULT_OVERLAP = 2
 
-	scale = framerate/float(DEFAULT_FFT_SIZE)
+	scale = (framerate/2.0)/(DEFAULT_FFT_SIZE/2.0+1)
 
 	fin= []
 	sumdb = 0

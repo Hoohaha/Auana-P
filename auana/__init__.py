@@ -67,13 +67,13 @@ class AuanaBase(object):
 				print "+----------"
 				print "| channel:%d, detect a broken frame, in time:"%channels, result[channels]["broken_frame"]
 				print "+----------"
-			return "Broken Frame",0,average_db
+			return "Broken Frame",average_db,0
 
 		elif (result[channel0]["name"]!=None) and (result[channel0]["name"] == result[channel1]["name"]):
-			return result[channel1]["name"],confidence,average_db
+			return result[channel1]["name"], average_db, confidence
 
 		else:
-			return "Not Found",0,average_db
+			return "Not Found",average_db,0
 
 class Fana(AuanaBase):
 	'''
