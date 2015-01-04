@@ -4,13 +4,12 @@ current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 '''==================save_fingerprint======================'''
 start = time.time()
-Fana(current_directory+"/sample/ding.wav").save_fingerprint()
-print time.time()-start
-print " "
+Fana(current_directory+"/sample/ding.wav").save_fingerprint(),time.time()-start
 
 start = time.time()
-Fana(current_directory+"/sample/source1.wav").save_fingerprint()
-print time.time()-start
+Fana(current_directory+"/sample/source1.wav").save_fingerprint(),time.time()-start
+
+Fana("E:/sample/twrk24f120m/atl/Debug/211.wav").save_fingerprint()
 print " "
 
 # start = time.clock()
@@ -33,7 +32,7 @@ print " "
 '''=========================test==========================='''
 # search .wav file
 dir_audio1 = "E:/sample"
-dir_audio0 = "C:/audio/twrk24f120m/iar/Debug"
+dir_audio0 = "E:/sample/twrk24f120m"
 audio_list = []
 file_num = 0
 for parent, dirnames, filenames in os.walk(dir_audio1):
@@ -44,6 +43,12 @@ for parent, dirnames, filenames in os.walk(dir_audio1):
 			path = path.replace('\\','/')
 			audio_list.append(path)
 			file_num += 1
+
+start = time.time()
+# print Fana("E:/sample/Come And Get Your Love.wav").stereo_start()
+print time.time()-start
+print " "
+
 NUM = 0
 failed=[]
 #start to handle

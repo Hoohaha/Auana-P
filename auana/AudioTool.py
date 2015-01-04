@@ -2,90 +2,95 @@
 from pyaudio import PyAudio, paInt16
 import wave, os,time
 
-def AudioRecordPlay(seconds,play=False,file_play_path=None,file_save_path=None):
+class AudioTool:
     '''
     This function include record and play, if you want to play and record,
     please set the play is True.
     The sample rate is 44100
     Bit:16
     '''
-    CHUNK = 1024
-    CHANNELS = 2
-    SAMPLING_RATE = 44100
-    FORMAT = paInt16
-    NUM = int(SAMPLING_RATE/CHUNK * seconds)
-
-    save_buffer = []
-
-    if play is True:
-        swf = wave.open(file_play_path, 'rb')
+    def __init__(self):
+        self.chunk = 1024
+        self.channels = 2
+        self.samplerate = 44100
+        self.format = paInt16
+        #open audio stream
+        self.pa = PyAudio()
+        self.save_buffer = []
     
-    #open audio stream
-    pa = PyAudio()
+    def record_play(self,seconds,play=False,file_play_path=None,file_save_path=None):
 
-    stream = pa.open(
-                    format   = FORMAT, 
-                    channels = CHANNELS, 
-                    rate     = SAMPLING_RATE, 
-                    input    = True,
-                    output   = play,
-                    frames_per_buffer  = CHUNK
-                    )
-    print time.clock(),"start to record."
-    while NUM:
-        save_buffer.append(stream.read(CHUNK))
-        NUM -= 1
+        NUM = int((self.samplerate/float(self.chunk)) * seconds)
+
         if play is True:
-            data = swf.readframes(CHUNK)
-            stream.write(data)
-            if data == " ": break
-    if play is True:
-        swf.close()
-    #close stream
-    stream.stop_stream()
-    stream.close()
-    pa.terminate()
+            swf = wave.open(file_play_path, 'rb')
+        
+        stream = self.pa.open(
+                        format   = self.format, 
+                        channels = self.channels, 
+                        rate     = self.samplerate, 
+                        input    = True,
+                        output   = play,
+                        frames_per_buffer  = self.chunk
+                        )
+        while NUM:
+            self.save_buffer.append(stream.read(self.chunk))
+            NUM -= 1
+            if play is True:
+                data = swf.readframes(self.chunk)
+                stream.write(data)
+                if data == " ": break
 
-    # save wav file
-    def save_wave_file(filename,data):
-        wf_save = wave.open(filename, 'wb')
-        wf_save.setnchannels(CHANNELS)
-        wf_save.setsampwidth(pa.get_sample_size(FORMAT))
-        wf_save.setframerate(SAMPLING_RATE)
-        wf_save.writeframes("".join(data))
-        wf_save.close()
+        if play is True:
+            swf.close()
+        #stop stream
+        stream.stop_stream()
+        stream.close()
 
-    save_wave_file(file_save_path, save_buffer)
+        # save wav file
+        def _save_wave_file(filename,data):
+            wf_save = wave.open(filename, 'wb')
+            wf_save.setnchannels(self.channels)
+            wf_save.setsampwidth(self.pa.get_sample_size(self.format))
+            wf_save.setframerate(self.samplerate)
+            wf_save.writeframes("".join(data))
+            wf_save.close()
 
-    del save_buffer[:]
+        _save_wave_file(file_save_path, self.save_buffer)
+        del self.save_buffer[:]
+        print "Have been saved"
+
     
 
-def AudioPlay(filepath):
-    '''
-    play audio
-    '''
-    CHUNK = 1024
+    def play(self,filepath):
 
-    wf = wave.open(filepath, 'rb')
-    pa = PyAudio()
-    default_output = pa.get_default_host_api_info().get('defaultOutputDevice')
-    stream =pa.open(format   = pa.get_format_from_width(wf.getsampwidth()), 
-                    channels = wf.getnchannels(), 
-                    rate     = wf.getframerate(), 
-                    output   = True,
-                    output_device_index = default_output)
+        wf = wave.open(filepath, 'rb')
 
-    NUM = int(wf.getframerate()/CHUNK * 15)
-    logging.info(">> START TO  PLAY  AUDIO")
-    while NUM:
-        data = wf.readframes(CHUNK)
-        if data == " ": break
-        stream.write(data)
-        NUM -= 1
-    stream.stop_stream()
-    stream.close()
-    del data
-    pa.terminate()
+        stream =self.pa.open(
+                        format   = self.pa.get_format_from_width(wf.getsampwidth()), 
+                        channels = wf.getnchannels(), 
+                        rate     = wf.getframerate(), 
+                        output   = True,
+                        )
 
-# if __name__ == '__main__':
-#     AudioRecordPlay(seconds=2,play=False,file_play_path=None,file_save_path="E:/1.wav")
+        NUM = int(wf.getframerate()/self.chunk * 15)
+
+        print "playing.."
+        while NUM:
+            data = wf.readframes(self.chunk)
+            if data == " ": break
+            stream.write(data)
+            NUM -= 1
+        stream.stop_stream()
+        del data
+        stream.close()
+
+    def close(self):
+        
+        self.pa.terminate()
+
+if __name__ == '__main__':
+    at = AudioTool()
+    at.record_play(seconds=2,play=True,file_play_path="C:/Users/b51762/Desktop/Auana-P/sample/10.wav",file_save_path="E:/1.wav")
+    # at.play("C:/Users/b51762/Desktop/Auana-P/sample/10.wav")
+    at.close()

@@ -1,4 +1,4 @@
-#Auther: Halye Guo  Date:2014/12
+#Author: Halye Guo  Date:2014/12
 import numpy as np
 # import scipy.signal as signal
 import os
@@ -94,7 +94,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 		index = catalog[quick]
 		sdata = get_reference_data(index)
 		confidence = find_match(sdata,tdata,tlen)
-		if confidence > 0.1:
+		if confidence:
 			match_audio = quick
 			max_confidence = confidence
 	else:
@@ -146,7 +146,7 @@ def find_match(sdata,tdata,tlen):
 	confidence=0
 	
 	if tlen < 200:
-		window_size = 6
+		window_size = 5
 	else:
 		window_size = 20
 
@@ -155,7 +155,7 @@ def find_match(sdata,tdata,tlen):
 	# print tlen/window_size
 	stop_condition = 10
 	
-	threshold = window_size*FIN_BIT*0.3
+	threshold = window_size*FIN_BIT*0.33
 
 	#Arithmetic sequence tolerance uplimit and down limit
 	up_limit = window_size+2
@@ -177,7 +177,7 @@ def find_match(sdata,tdata,tlen):
 			if dis <= dismin :
 				dismin  = dis
 				min_seq = index
-				if window_size>10 and dismin < 100:break
+				# if window_size >10 and dismin < 100:break
 
 		#filter:block distance is very close, and they are Arithmetic sequence
 		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
