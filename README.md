@@ -16,6 +16,7 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 1.Broken-frame detection                                      [support]<br>
 2.Sound recognition                                           [support]<br>
 3.Volume value detection                                      [support]<br>
+4.Audio play and record                                       [support]<br>
 4.Signal noise ratio detection                                [will]<br>
 5.Real time detection and analysis                            [will]<br>
 6.Support mp3 ,wma…etc                                        [will]<br>
@@ -28,5 +29,8 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
     For example:<br>
               from auana import Fana
               Fana("sample.wav").save_fingerprint #save the fingerprint of audio
+              
               print Fana("sample.wav").mono_start() #mono analyze
               print Fana("sample.wav").stereo_start() #stereo analyze
+              
+
