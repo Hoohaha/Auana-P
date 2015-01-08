@@ -27,11 +27,14 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 ###How to use it to analysis a wave file?
 -----------------------------------
     For example:<br>
+              
+              from auana import Preprocess
+              p=Preprocess
+              
+              #memory the audio infomation,before you start to Analyze
+              p.hear("sample.wav")
+              
               from auana import Fana
-              
-              #save the fingerprint of audio
-              Fana("sample.wav").pre 
-              
               #mono analyze
               print Fana("sample.wav").mono_start()
               
