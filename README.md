@@ -39,5 +39,9 @@ This algorothm is not stable. Please use git pull to sync the code to get the la
 
 ###Version modification
 --------------
-0.1 Auana Pacage
-0.2 Auana: designed by C and python.
+0.1 Auana Pacage <br>
+0.2 Auana: designed by C and python.<br>
+
+###Performance
+-----
+
