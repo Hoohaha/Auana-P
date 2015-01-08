@@ -8,8 +8,8 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 
 ###Setup:
 -----------------------------------
-* 1) Firstly, install python: numpy and sicpy(math tool)<br>
-* 2) Besides, install pyaudio (record audio or play audio)[option]<br>
+*  Firstly, install python: numpy(math tool)<br>
+*  Besides, install pyaudio (record audio or play audio)[option]<br>
 
 ###Features:
 -----------------------------------
@@ -28,10 +28,15 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 -----------------------------------
     For example:<br>
               from auana import Fana
-              Fana("sample.wav").pre #save the fingerprint of audio
               
-              print Fana("sample.wav").mono_start() #mono analyze
-              print Fana("sample.wav").stereo_start() #stereo analyze
+              #save the fingerprint of audio
+              Fana("sample.wav").pre 
+              
+              #mono analyze
+              print Fana("sample.wav").mono_start()
+              
+              #stereo analyze
+              print Fana("sample.wav").stereo_start() 
               
 ###Notice
 -----------------------------------
