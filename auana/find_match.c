@@ -1,5 +1,11 @@
 #include "find_match.h"
- 
+
+/*!
+ * @brief Hamming weight
+ *
+ * Get the count of "1" in a number.
+ *
+ */ 
 int hamming_weight(uint32 x)  
 {  
 	const uint32 m1  = 0x55555555; //binary: 0101...  	
@@ -10,75 +16,82 @@ int hamming_weight(uint32 x)
     x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits  
     x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits   
     x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits   
-    return (x * h01)>>24;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+    return (x * h01)>>24;           //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
 }
 
-long distance(uint32 *tData,uint32 *sData, int length)
-{
-	int i;
-	long sum=0;
-	for(i=0;i<length;i++)
-		sum += hamming_weight(tData[i] ^ sData[i]);
-	return sum;
-}
-
+/*!
+ * @brief Find the samilar file
+ *
+ * Compute the target and source files distcance, 
+ * and give the percentage of same part.
+ *
+ * @param *tData: target file Data
+ *        *sData: source file Data
+ *        tlen: tData length
+ *        slen: sData length
+ *        wsize: How many data need to search in a cycle.
+ *        offset: window move.
+ */
 float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int offset)
 {
-	int i=0, index=0, dis=0,confidence = 0, max_index = 0, dismin = 0, min_seq=0, min_seq0 = 0,temp=0,next_begain=0; 
-	
-	float Threshold = wsize*32*0.3;
-	int dw_limit = wsize-2, up_limit = wsize +2;
+	int n=0, i=0, index=0, max_index=0, next_begain=0;
+	int dismin=0, dis=0, min_seq=0, min_seq0=0, temp=0,confidence=0;
+	int Threshold, dw_limit, up_limit;
+	int _offset=1;
 
+	Threshold = (int)(wsize*32*0.29);
+	dw_limit = wsize-2;
+	up_limit = wsize+2;
 	max_index = slen - wsize;
-
-	uint32 *tbuffer = (uint32 *)malloc(wsize*sizeof(uint32));
-	uint32 *sbuffer = (uint32 *)malloc(wsize*sizeof(uint32));
-
-	memset(tbuffer,0,wsize*sizeof(uint32));
-	memset(sbuffer,0,wsize*sizeof(uint32));
 
 	// printf(">>>>>>>>>>>>>>>>>%d  %d  %d %d\n",wsize,slen,dw_limit,up_limit);//For Debug
 
 	for(i=0; i<(tlen/wsize); i++)
 	{
-		dismin = 300;
+		dismin   = Threshold;
 		min_seq0 = min_seq;
-		memcpy(tbuffer, tData+wsize*i, wsize*sizeof(uint32));
 
-		for(index = next_begain; index<max_index; index += offset)
+		for(index = next_begain; index<max_index; index += _offset)
 		{	
-			memcpy(sbuffer, sData+index, wsize*sizeof(uint32));
-			dis = distance(tbuffer,sbuffer,wsize);
+			//compute the distance of two buffer
+			dis = 0;
+			for(n=0;n<wsize;n++)
+			{
+				dis += hamming_weight(tData[wsize*i + n] ^ sData[wsize+index+n]);
+				if (dis > dismin) break;
+			}
+
+			//get min distance
 			if (dis < dismin)
 			{
-				dismin = dis;
+				dismin  = dis;
 				min_seq = index;
-				if (wsize>10  && dismin <= 80)
-					break;
+				if (wsize>10  && dismin<=70) break;
 			}
 		}
 
-		// printf("  dismin: %d  minseq: %d, minseq0: %d\n",dismin,min_seq,min_seq0);//For Debug
 		temp = min_seq-min_seq0;
-		// printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
-		if ((dismin < Threshold) && temp >=dw_limit && temp <= up_limit)
+		
+		if ((dismin<Threshold) && temp>=dw_limit && temp<=up_limit)
 		{
+			// printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
 			confidence += 1;
 			next_begain = min_seq;
+			_offset = 1;
 		}
+		if (confidence > 3)
+			_offset = offset;
 
-		if (i>15 && confidence < 3)
-			break;
+		if (i>13 && confidence < 3)break;//stop find
 	}
+
 	if (confidence <= 1)
 		return 0;
-	free(tbuffer);
-	free(sbuffer);
-	return ((float)(confidence))/(tlen/wsize);
-	
+
+	return ((float)(confidence))/(tlen/wsize-1);
 }
 
-
+//For test
 int main()
 {	int i = 0,len=2;
 	long n = 0;

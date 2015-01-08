@@ -5,14 +5,14 @@ import os
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 from ctypes import *
 
-# ham = cdll.LoadLibrary("C:/Users/b51762/Desktop/Auana-P/auana/find_match.dll")
-# ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
-# 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
-# 						   c_int,
-# 						   c_int,
-# 						   c_int,
-# 						   c_int]
-# ham.find_match.restype = c_float
+ham = cdll.LoadLibrary("C:/Users/b51762/Desktop/Auana-P/auana/find_match.so")
+ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
+						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
+						   c_int,
+						   c_int,
+						   c_int,
+						   c_int]
+ham.find_match.restype = c_float
 # ham.distance.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 # 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 # 						   c_int]
@@ -114,7 +114,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 		for audio in catalog:
 			index = catalog[audio]
 			sdata = get_reference_data(index)
-
+			# print audio
 			confidence = find_match(sdata,tdata,tlen)
 			#filter: if confidence more than 50%, that is to say the it is same with the reference
 			if confidence >= 0.5:
@@ -159,24 +159,24 @@ def find_match(sdata,tdata,tlen):
 	confidence=0
 
 	if tlen < 300:
-		window_size = 5
+		window_size = 3
 		offset = 1
-	elif 300 <= tlen <= 2000:
+	elif 300 <= tlen <= 1000:
 		window_size = 20
 		offset = 2
 	else:
-		window_size = 40
+		window_size = 30
 		offset = 3
-	# slen = sdata.shape[-1]
-	# return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
+	slen = sdata.shape[-1]
+	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
 
 
 	next_begain = 0
 	max_index = sdata.shape[-1]-window_size
 	# print tlen/window_size
-	stop_condition = 13
+	stop_condition = 15
 	
-	threshold = window_size*FIN_BIT*0.28
+	threshold = window_size*FIN_BIT*0.3
 
 	#Arithmetic sequence tolerance uplimit and down limit
 	up_limit = window_size+2
@@ -198,19 +198,20 @@ def find_match(sdata,tdata,tlen):
 			if dis <= dismin :
 				dismin  = dis
 				min_seq = index
-				if window_size >10 and dismin < 100:break
+				if window_size >10 and dismin <= 70:break
 		# print "++ a:%d slen: %d  dismin: %d  minseq: %d  minseq0: %d"%(a,sdata.shape[-1],dismin,min_seq,min_seq0)
 		#filter:block distance is very close, and they are Arithmetic sequence
 		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
 			confidence += 1
 			next_begain = min_seq
-			# print "HaHa"
+			# print "HaHa%d"%confidence
 		#filter:if search done,stop
 		if next_begain >= max_index:break
 		#filter:if confidence is too low,stop
 		if a>stop_condition and confidence<2:return 0
-
-	return round(float(confidence)/(tlen/window_size), 3)
+	if (confidence <= 1):
+		return 0
+	return round(float(confidence)/(tlen/window_size-1), 3)
 
 
 ###########################################################

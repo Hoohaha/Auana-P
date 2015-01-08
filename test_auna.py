@@ -31,7 +31,7 @@ for parent, dirnames, filenames in os.walk(dir_audio1):
 # print " "
 
 start = time.time()
-print Fana("E:/none/s/121.wav").stereo_start()
+print Fana("E:/sample/twrk21f120m/kds/Release/111.wav").stereo_start()
 print time.time()-start
 print " "
 
