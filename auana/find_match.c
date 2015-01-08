@@ -82,7 +82,7 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int
 		if (confidence > 3)
 			_offset = offset;
 
-		if (i>13 && confidence < 3)break;//stop find
+		if (i>15 && confidence < 3)break;//stop find
 	}
 
 	if (confidence <= 1)

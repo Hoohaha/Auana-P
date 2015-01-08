@@ -7,14 +7,21 @@ try:
 except ImportError:
 	print("Please build and install the numpy Python ")
 
-current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
-class AuanaBase(object):
+def _memory(wdata0,wdata1,framerate,index):
+	_cache = []
+	_cache.append(get_fingerprint(wdata=wdata0,framerate=framerate,db=False))
+	_cache.append(get_fingerprint(wdata=wdata1,framerate=framerate,db=False))
+	np.array(_cache,dtype=np.uint32).tofile(_work_dir+"/data/"+index+".bin")
+	del _cache[:]
+
+class Auana(object):
 
 	def __init__(self):
 
 		try:
-			cfile = open(current_directory+'/data/AudioFingerCatalog.pkl', 'rb')
+			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
 			self.catalog = pickle.load(cfile)
 		except EOFError:
 			self.catalog = {}
@@ -76,12 +83,12 @@ class AuanaBase(object):
 		else:
 			return "Not Found",average_db,0
 
-class Fana(AuanaBase):
+class Fana(Auana):
 	'''
 	Fana: File Analysis
 	'''
 	def __init__(self,filepath):	
-		AuanaBase.__init__(self)
+		Auana.__init__(self)
 		#open wav file
 		wf = wave.open(filepath, 'rb')
 		params = wf.getparams()
@@ -97,6 +104,7 @@ class Fana(AuanaBase):
 		self.framerate =framerate
 		self.wdata0=wave_data[0]
 		self.wdata1=wave_data[1]
+
 	def stereo_start(self):
 		return self.stereo(self.wdata0,self.wdata1,self.framerate)
 
@@ -104,39 +112,15 @@ class Fana(AuanaBase):
 		data = {0:self.wdata0,1:self.wdata1}
 		return self.mono(data[channel],channel,self.framerate)
 
-	def pre(self):
-		'''
-		catalog = {"sample.wav":index}
-		'''
-		#judge the file if saved before.
-		if self.catalog.has_key(self.name):
-			print "%s saved before"%self.name
-			return "continue.."
+	def hear(self):
+		pass
 
-		index = str(len(self.catalog))
 
-		#creat .bin file
-		dfile = open(current_directory+"/data/"+index+".bin", 'w+')
-		dfile.close()
-
-		#compute the fingerprint and save it
-		temp = []
-		temp.append(get_fingerprint(wdata=self.wdata0,framerate=self.framerate,db=False))
-		temp.append(get_fingerprint(wdata=self.wdata1,framerate=self.framerate,db=False))
-		temp=np.array(temp,dtype=np.uint32)
-		temp.tofile(current_directory+"/data/"+index+".bin")
-
-		#save index
-		self.catalog.update({self.name:index})
-		cfile = open(current_directory+'/data/AudioFingerCatalog.pkl', 'w+')	
-		pickle.dump(self.catalog, cfile)
-		cfile.close()
-		print "save Audio-Fingerprint Done"
 
 #developing...
-def MicAnalyis(AuanaBase):
+def MicAnalyis(Auana):
 	def __init__(self):
-		AuanaBase.__init__(self)
+		Auana.__init__(self)
 
 		CHUNK         = 4096
 		FORMAT        = paInt16
@@ -169,3 +153,68 @@ def MicAnalyis(AuanaBase):
 		#fft transfer
 		xfp  = 20*np.log10(np.abs(np.fft.rfft(xs)))
 		db   = np.sum(xfp[0:200])/200
+
+
+class Preprocess:
+	def __init__(self):
+		try:
+			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
+			self.catalog = pickle.load(cfile)
+		except EOFError:
+			self.catalog = {}
+		cfile.close()
+
+	def hear(self,filepath):
+		'''
+		catalog = {"sample.wav":index}
+		'''
+		filename = os.path.basename(filepath)
+		#judge the file if saved before.
+		if self.catalog.has_key(filename):
+			print "\"%s\" Have heared before!"%filename
+			return "continue.."
+
+		index = str(len(self.catalog))
+
+		#creat .bin file
+		dfile = open(_work_dir+"/data/"+index+".bin", 'w+')
+		dfile.close()
+
+		wf = wave.open(filepath, 'rb')
+		nchannels, sampwidth, framerate, nframes = wf.getparams()[:4]
+		wave_data = np.fromstring(wf.readframes(nframes), dtype = np.short)
+		wave_data.shape = -1,2
+		wave_data = wave_data.T #transpose
+		wf.close()
+
+		#save data
+		_memory(wave_data[0],wave_data[1],framerate,index)
+
+		#update catalog
+		self.catalog.update({filename:index})
+		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
+		pickle.dump(self.catalog, cfile)
+		cfile.close()
+		print "Hear/Save Done"
+
+	def clean_up(self):
+		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')
+		cfile.close()
+		print "Already Clean Done!"
+
+	def forget(self,filename):
+		self.catalog.pop(filename)
+		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
+		pickle.dump(self.catalog, cfile)
+		cfile.close()
+		print "Already forgot <<%s>>!"%filename
+	
+	def show(self):
+		#sort dict, te is a tuple 
+		te = sorted(self.catalog.iteritems(),key=lambda asd:asd[1],reverse=False)
+		print "***** File List *******"
+		print "Total:%d"%len(self.catalog)
+		print " No.","    ","File Name"
+		for item in te:
+			print "  %s       %s"%(item[1],item[0])
+		print "***********************"

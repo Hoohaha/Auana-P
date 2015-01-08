@@ -8,7 +8,10 @@ S'3'
 sS'source1.wav'
 p4
 S'2'
-sS'211.wav'
+sS'piano.wav'
 p5
+S'4'
+sS'211.wav'
+p6
 S'0'
 s.

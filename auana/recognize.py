@@ -170,7 +170,8 @@ def find_match(sdata,tdata,tlen):
 	slen = sdata.shape[-1]
 	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
 
-
+	#Old version
+	#***********************************************************#
 	next_begain = 0
 	max_index = sdata.shape[-1]-window_size
 	# print tlen/window_size

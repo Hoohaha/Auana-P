@@ -1,16 +1,20 @@
-from auana import Fana
+from auana import Fana, Preprocess
 import os,time
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
-'''==================save_fingerprint======================'''
-Fana(current_directory+"/sample/ding.wav").pre()
-Fana(current_directory+"/sample/source1.wav").pre()
-Fana("E:/sample/twrk24f120m/atl/Debug/211.wav").pre()
-print " "
-Fana("E:/Come And Get Your Love.wav").pre()
+
+p = Preprocess()
+#hear the file and memory it
+p.hear(current_directory+"/sample/ding.wav")
+p.hear(current_directory+"/sample/source1.wav")
+p.hear(current_directory+"/sample/piano.wav")
+p.hear("E:/Come And Get Your Love.wav")
+
+#show the list
+p.show()
+
 print " "
 
-'''=========================test==========================='''
 # search .wav file
 dir_audio1 = "E:/sample"
 dir_audio0 = "E:/none"
@@ -24,16 +28,6 @@ for parent, dirnames, filenames in os.walk(dir_audio1):
 			path = path.replace('\\','/')
 			audio_list.append(path)
 			file_num += 1
-
-# start = time.time()
-# print Fana("E:/Come And Get Your Love.wav").stereo_start()
-# print time.time()-start
-# print " "
-
-start = time.time()
-print Fana("E:/sample/twrk21f120m/kds/Release/111.wav").stereo_start()
-print time.time()-start
-print " "
 
 ab = time.clock()
 NUM = 0
