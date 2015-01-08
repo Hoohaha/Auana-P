@@ -1,4 +1,4 @@
-Auana-P Version 0.1
+Auana-P Version 0.2
 =======
 
 Auana-P: Auana algorithm Package.<br>
@@ -36,3 +36,8 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 ###Notice
 -----------------------------------
 This algorothm is not stable. Please use git pull to sync the code to get the latest update.
+
+###Version modification
+--------------
+0.1 Auana Pacage
+0.2 Auana: designed by C and python.
