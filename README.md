@@ -33,4 +33,6 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
               print Fana("sample.wav").mono_start() #mono analyze
               print Fana("sample.wav").stereo_start() #stereo analyze
               
-
+###Notice
+-----------------------------------
+This algorothm is not stable. Please use git pull to sync the code to get the latest update.
