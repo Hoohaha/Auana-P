@@ -56,6 +56,7 @@ class AuanaBase(object):
 			#'quick'means quick recognition.
 			result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
 		else:
+			#if channel0 not find, and we don`t find it in channel1.
 			result[channel1]={"name":None,"broken_frame":0,"confidence":0,"average_db":result[channel0]["average_db"]}
 
 		#handle the result from channel0 and channel1.
@@ -103,7 +104,7 @@ class Fana(AuanaBase):
 		data = {0:self.wdata0,1:self.wdata1}
 		return self.mono(data[channel],channel,self.framerate)
 
-	def save_fingerprint(self):
+	def pre(self):
 		'''
 		catalog = {"sample.wav":index}
 		'''

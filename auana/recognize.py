@@ -3,7 +3,20 @@ import numpy as np
 # import scipy.signal as signal
 import os
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+from ctypes import *
 
+# ham = cdll.LoadLibrary("C:/Users/b51762/Desktop/Auana-P/auana/find_match.dll")
+# ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
+# 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
+# 						   c_int,
+# 						   c_int,
+# 						   c_int,
+# 						   c_int]
+# ham.find_match.restype = c_float
+# ham.distance.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
+# 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
+# 						   c_int]
+# ham.distance.restype = c_long
 #How many data in fft process, this value must be 2^n. 
 DEFAULT_FFT_SIZE = 4096
 #Sub-fingerprint bit depth
@@ -144,18 +157,26 @@ def find_match(sdata,tdata,tlen):
 	min_seq=0
 	min_seq0=0
 	confidence=0
-	
-	if tlen < 200:
+
+	if tlen < 300:
 		window_size = 5
-	else:
+		offset = 1
+	elif 300 <= tlen <= 2000:
 		window_size = 20
+		offset = 2
+	else:
+		window_size = 40
+		offset = 3
+	# slen = sdata.shape[-1]
+	# return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
+
 
 	next_begain = 0
 	max_index = sdata.shape[-1]-window_size
 	# print tlen/window_size
-	stop_condition = 10
+	stop_condition = 13
 	
-	threshold = window_size*FIN_BIT*0.33
+	threshold = window_size*FIN_BIT*0.28
 
 	#Arithmetic sequence tolerance uplimit and down limit
 	up_limit = window_size+2
@@ -168,27 +189,28 @@ def find_match(sdata,tdata,tlen):
 		dismin   = 300
 		min_seq0 = min_seq
 
-		for index in  xrange(next_begain, max_index,3):#reference file
+		for index in  xrange(next_begain, max_index,offset):#reference file
 			#calculate the distant of each subfingerprint between two songs
 			D = tdata[tsta : tend] ^ sdata[index : index+window_size]
 			#get distant of two search-windows
 			dis = np.sum(np.array([hamming_weight(long(d)) for d in D]))
-
+			# dis = ham.distance(tdata[tsta : tend],sdata[index : index+window_size],window_size)
 			if dis <= dismin :
 				dismin  = dis
 				min_seq = index
-				# if window_size >10 and dismin < 100:break
-
+				if window_size >10 and dismin < 100:break
+		# print "++ a:%d slen: %d  dismin: %d  minseq: %d  minseq0: %d"%(a,sdata.shape[-1],dismin,min_seq,min_seq0)
 		#filter:block distance is very close, and they are Arithmetic sequence
 		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
 			confidence += 1
 			next_begain = min_seq
+			# print "HaHa"
 		#filter:if search done,stop
 		if next_begain >= max_index:break
 		#filter:if confidence is too low,stop
 		if a>stop_condition and confidence<2:return 0
 
-	return round(float(confidence)/(tlen/window_size-1), 3)
+	return round(float(confidence)/(tlen/window_size), 3)
 
 
 ###########################################################
@@ -242,7 +264,7 @@ def get_fingerprint(wdata,framerate,db=True):
 			for b in xrange(b0,b1+1):
 				#calculate the Audio center of mass 
 				fp = xfp[b]
-				p1 += fp*(b**1.0001)
+				p1 += fp*(b**1.00015)
 				p2 += fp
 				num += 1
 			#calculate the average volume of one fingerprint
