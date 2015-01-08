@@ -8,8 +8,8 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 
 ###Setup:
 -----------------------------------
-1) Firstly, install python: numpy and sicpy(math tool)<br>
-2) Besides, install pyaudio (record audio or play audio)[option]<br>
+*1) Firstly, install python: numpy and sicpy(math tool)<br>
+*2) Besides, install pyaudio (record audio or play audio)[option]<br>
 
 ###Features:
 -----------------------------------
