@@ -45,8 +45,8 @@ Please use git pull to sync the code to get the latest update.
 
 ###Version modification
 --------------
-0.1 Auana Pacage <br>
-0.2 Auana: designed by C and python.<br>
+version 0.1.Auana Pacage. <br>
+version 0.2.Auana: designed by C and python.<br>
 
 ###Performance
 -----
