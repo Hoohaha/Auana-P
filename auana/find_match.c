@@ -32,14 +32,21 @@ int hamming_weight(uint32 x)
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
  */
-float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int offset)
+float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
 {
-	int n=0, i=0, index=0, max_index=0, next_begain=0;
-	int dismin=0, dis=0, min_seq=0, min_seq0=0, temp=0,confidence=0;
-	int Threshold, dw_limit, up_limit;
-	int _offset=1;
+	short _offset=1,temp=0,confidence=0;
+	register int n=0,i=0,index=0;
+	int max_index=0, next_begain=0;
+	int dismin=0, dis=0, min_seq=0, min_seq0=0;
 
-	Threshold = (int)(wsize*32*0.29);
+	const uint32 m1  = 0x55555555; //binary: 0101...  	
+	const uint32 m2  = 0x33333333; //binary: 00110011..  
+	const uint32 m4  = 0x0f0f0f0f; //binary:  4 zeros,  4 ones ...
+	const uint32 h01 = 0x01010101; //the sum of 256 to the power of 0,1,2,3... 
+	uint32 x;
+
+	int Threshold, dw_limit, up_limit;
+	Threshold = (int)((wsize<<5)*0.29);
 	dw_limit = wsize-2;
 	up_limit = wsize+2;
 	max_index = slen - wsize;
@@ -57,7 +64,14 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int
 			dis = 0;
 			for(n=0;n<wsize;n++)
 			{
-				dis += hamming_weight(tData[wsize*i + n] ^ sData[wsize+index+n]);
+				x = tData[wsize*i + n] ^ sData[wsize+index+n];
+				/*hamming weight*/
+				x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits  
+    			x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits   
+    			x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits   
+    			x = (x * h01)>>24;              //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24)
+    			dis += x;
+				// dis += hamming_weight(tData[wsize*i + n] ^ sData[wsize+index+n]);
 				if (dis > dismin) break;
 			}
 
@@ -92,24 +106,24 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int
 }
 
 //For test
-int main()
-{	int i = 0,len=2;
-	long n = 0;
-	// float aaa=0;
-	// uint32 tdata[5]={1,2,3,4,0};
-	// uint32 sdata[5]={1,2,3,4,0};
-	// aaa = find_match(tdata,sdata,5,5,len);
-	// printf("confidence:%f\n",aaa);
-	// printf ("res:%d\n",n);
-	uint32 m=0;
-	n = 5;
-	while(n)
-	{
-	scanf("%d",&m);
-	printf("input value%d\n",m);
-	i = hamming_weight(m);
-	printf("res: %d\n",i);
-		n -= 1;
-	}
+// int main()
+// {	int i = 0,len=2;
+// 	long n = 0;
+// 	// float aaa=0;
+// 	// uint32 tdata[5]={1,2,3,4,0};
+// 	// uint32 sdata[5]={1,2,3,4,0};
+// 	// aaa = find_match(tdata,sdata,5,5,len);
+// 	// printf("confidence:%f\n",aaa);
+// 	// printf ("res:%d\n",n);
+// 	uint32 m=0;
+// 	n = 5;
+// 	while(n)
+// 	{
+// 	scanf("%d",&m);
+// 	printf("input value%d\n",m);
+// 	i = hamming_weight(m);
+// 	printf("res: %d\n",i);
+// 		n -= 1;
+// 	}
 
-}
+// }

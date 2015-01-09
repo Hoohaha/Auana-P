@@ -31,4 +31,4 @@ int hamming_weight(uint32 x);
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
  */
-float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, int offset);
+float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset);

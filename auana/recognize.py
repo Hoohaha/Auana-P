@@ -11,7 +11,7 @@ ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags
 						   c_int,
 						   c_int,
 						   c_int,
-						   c_int]
+						   c_short]
 ham.find_match.restype = c_float
 # ham.distance.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 # 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 

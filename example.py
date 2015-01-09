@@ -22,10 +22,10 @@ p.show()
 
 '''=========================File Analysis==========================='''
 
-# start = time.clock()
-# res = Fana("E:/Come And Get Your Love.wav").stereo_start()
-# print "Match-File:%30s accuracy:%2.1f volume:%3.1f time-cost:%3.2f"%(res[0],res[2],res[1],time.clock()-start)
-# print " "
+start = time.clock()
+res = Fana("E:/Come And Get Your Love.wav").stereo_start()
+print "Match-File:%30s accuracy:%2.1f volume:%3.1f time-cost:%3.2f"%(res[0],res[2],res[1],time.clock()-start)
+print " "
 
 
 #sample test

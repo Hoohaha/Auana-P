@@ -10,10 +10,6 @@ p.hear(current_directory+"/sample/source1.wav")
 p.hear(current_directory+"/sample/piano.wav")
 p.hear("E:/Come And Get Your Love.wav")
 
-#show the list
-p.show()
-
-print " "
 
 # search .wav file
 dir_audio1 = "E:/sample"
