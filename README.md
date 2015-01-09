@@ -6,12 +6,12 @@ Auana-P: Auana algorithm Package.<br>
 Auana is a light tool with the audio recognition based on python and c.It can easily find simialr audio which it heared before. And it can detect and analyze the audio file, such as: broken-frame, noise, volume etc.<br>
 Now Auana only support wav file. For the automation of audio validation, i don`t think that must be a bad solution. It is still in developing. If you are intereted in it, you can contact me.<br>
 
-###Setup:
+##Setup:
 -----------------------------------
-*  Firstly, install numpy    (math tool)<br>
-*  Besides, install pyaudio  (record audio or play audio)[option]<br>
+*  Firstly, install "numpy"    (math tool)<br>
+*  Besides, install "pyaudio"  (record audio or play audio)[option]<br>
 
-###Features:
+##Features:
 -----------------------------------
 1.Broken-frame detection                                      [support]<br>
 2.Sound recognition                                           [support]<br>
@@ -24,7 +24,7 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 9.Detect noise                                                [will]<br>
 
 
-###How to use it to analysis a wave file?
+##How to use it to analysis a wave file?
 -----------------------------------
     For example:<br>
               
@@ -41,16 +41,16 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
               #stereo analyze
               print Fana("sample.wav").stereo_start() 
               
-###Notice
+##Notice
 -----------------------------------
 This algorothm is not stable. <br>
 Please use git pull to sync the code to get the latest update.
 
-###Version modification
+##Version modification
 --------------
 version 0.1.Auana Pacage. <br>
 version 0.2.Auana: designed by C and python.<br>
 
-###Performance
+##Performance
 -----
 
