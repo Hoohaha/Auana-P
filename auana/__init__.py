@@ -10,16 +10,15 @@ except ImportError:
 _work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 def _memory(wdata0,wdata1,framerate,index):
-	_cache = []
-	_cache.append(get_fingerprint(wdata=wdata0,framerate=framerate,db=False))
-	_cache.append(get_fingerprint(wdata=wdata1,framerate=framerate,db=False))
-	np.array(_cache,dtype=np.uint32).tofile(_work_dir+"/data/"+index+".bin")
-	del _cache[:]
+	cache = []
+	cache.append(get_fingerprint(wdata=wdata0,framerate=framerate,db=False))
+	cache.append(get_fingerprint(wdata=wdata1,framerate=framerate,db=False))
+	np.array(cache,dtype=np.uint32).tofile(_work_dir+"/data/"+index+".bin")
+	del cache[:]
 
 class Auana(object):
 
 	def __init__(self):
-
 		try:
 			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
 			self.catalog = pickle.load(cfile)
@@ -30,6 +29,10 @@ class Auana(object):
 	def __del__(self):
 		pass
 
+	def broken_frame(self, wdata, channel, framerate):
+		broframe = detect_broken_frame(wdata, framerate)
+		return broframe
+
 	def mono(self,wdata,channel,framerate,quick=None):
 		'''
 		To improve the speed of recognition, we use the "quick" to do it.
@@ -39,13 +42,14 @@ class Auana(object):
 		if len(self.catalog)==0:
 			print("Error: No data saved in pkl file." 
 				"Please fisrtly save the fingerprint of the reference audio.")
-			time.sleep(5)
+			self.__del__()
 			os._exit(1)
+		broframe = 0
 
 		#audio recognition
-		audio_name, confidence,avgdb=recognize(self.catalog,wdata,framerate,channel,quick)
+		audio_name, confidence, avgdb = recognize(self.catalog,wdata,framerate,channel,quick)
 		#broken frame detection
-		broframe=detect_broken_frame(wdata, framerate)
+		# broframe=detect_broken_frame(wdata, framerate)
 
 		return {"name":audio_name,"broken_frame":broframe,"confidence":confidence,"average_db":avgdb}
 
@@ -112,10 +116,24 @@ class Fana(Auana):
 		data = {0:self.wdata0,1:self.wdata1}
 		return self.mono(data[channel],channel,self.framerate)
 
-	def hear(self):
-		pass
-
-
+	def broken_frame(self):
+		chann0 = detect_broken_frame(self.wdata0, self.framerate)
+		chann1 = detect_broken_frame(self.wdata1, self.framerate)
+		if chann0 == 0 and chann1 == 0:
+			print "No Broken-Frame Found!"
+		else:
+			print "Numbers in Left  channel : %d"%len(chann0)
+			print "Numbers in Right channel : %d"%len(chann1)
+			if chann0 != 0:
+				for item in chann0:
+					print "+----------"
+					print "| channel:%d, detect a broken frame, in time:"%0, item
+					print "+----------"
+			if chann1 != 0:
+				for item in chann1:
+					print "+----------"
+					print "| channel:%d, detect a broken frame, in time:"%1, item
+					print "+----------"
 
 #developing...
 def MicAnalyis(Auana):
@@ -139,7 +157,7 @@ def MicAnalyis(Auana):
 
 	def __del__(self):
 		pass
-	def satrt(self):
+	def start(self):
 		pass
 
 	def stop(self):
@@ -209,10 +227,10 @@ class Preprocess:
 		cfile.close()
 		print "Already forgot <<%s>>!"%filename
 	
-	def show(self):
+	def items(self):
 		#sort dict, te is a tuple 
 		te = sorted(self.catalog.iteritems(),key=lambda asd:asd[1],reverse=False)
-		print "***** File List *******"
+		print "******* File List *******"
 		print "Total:%d"%len(self.catalog)
 		print " No.","    ","File Name"
 		for item in te:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from pyaudio import PyAudio, paInt16
 import wave, os,time
+import numpy as np
 
 class AudioTool:
     '''
@@ -33,11 +34,19 @@ class AudioTool:
                         output   = play,
                         frames_per_buffer  = self.chunk
                         )
+        # wave_data = []
         while NUM:
-            self.save_buffer.append(stream.read(self.chunk))
+            data = stream.read(self.chunk)
+            self.save_buffer.append(data)
+            wave_data=np.fromstring(data, dtype = np.short)
+            wave_data.shape = -1,2
+            wave_data = wave_data.T #transpose multiprocessing.Process
+            # print int(data)
+            print wave_data
             NUM -= 1
             if play is True:
                 data = swf.readframes(self.chunk)
+
                 stream.write(data)
                 if data == " ": break
 
@@ -58,7 +67,7 @@ class AudioTool:
 
         _save_wave_file(file_save_path, self.save_buffer)
         del self.save_buffer[:]
-        print "Have been saved"
+        print file_save_path," Record Sucessful!"
 
     
 
@@ -91,6 +100,6 @@ class AudioTool:
 
 if __name__ == '__main__':
     at = AudioTool()
-    at.record_play(seconds=2,play=True,file_play_path="C:/Users/b51762/Desktop/Auana-P/sample/10.wav",file_save_path="E:/1.wav")
-    # at.play("C:/Users/b51762/Desktop/Auana-P/sample/10.wav")
+    at.record_play(seconds = 1,file_save_path="C:/2.wav")
     at.close()
+    print (-1)<<8

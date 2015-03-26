@@ -46,8 +46,8 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 	uint32 x;
 
 	int Threshold, dw_limit, up_limit;
-	Threshold = (int)((wsize<<5)*0.29);
-	dw_limit = wsize-2;
+	Threshold = (int)((wsize<<5)*0.3);
+	dw_limit = wsize-1;
 	up_limit = wsize+2;
 	max_index = slen - wsize;
 
@@ -96,7 +96,7 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 		if (confidence > 3)
 			_offset = offset;
 
-		if (i>15 && confidence < 3)break;//stop find
+		if (i>20 && confidence < 3)break;//stop find
 	}
 
 	if (confidence <= 1)

@@ -4,8 +4,7 @@ import numpy as np
 import os
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 from ctypes import *
-
-ham = cdll.LoadLibrary("C:/Users/b51762/Desktop/Auana-P/auana/find_match.so")
+ham = cdll.LoadLibrary(current_directory+"/find_match.so")
 ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 						   c_int,
@@ -13,10 +12,7 @@ ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags
 						   c_int,
 						   c_short]
 ham.find_match.restype = c_float
-# ham.distance.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
-# 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
-# 						   c_int]
-# ham.distance.restype = c_long
+
 #How many data in fft process, this value must be 2^n. 
 DEFAULT_FFT_SIZE = 4096
 #Sub-fingerprint bit depth
@@ -53,7 +49,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	Returns
     ----------
 	match_audio: the real audio name.                Type:[string]
-	max_confidence: accuracy						 Type:[float]
+	max_accuracy: accuracy						 Type:[float]
 	avgdb: average Volume                            Type:[float]
 
 	Data storage format
@@ -83,7 +79,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	'''
 
 	tdata,avgdb    = get_fingerprint(wdata,framerate)
-	max_confidence = 0
+	max_accuracy   = 0
 	match_audio    = None
 	tlen           = tdata.shape[-1]
 	
@@ -106,24 +102,25 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	if quick is not None:
 		index = catalog[quick]
 		sdata = get_reference_data(index)
-		confidence = find_match(sdata,tdata,tlen)
-		if confidence:
+		accuracy = find_match(sdata,tdata,tlen)
+		if accuracy > 0.1:
 			match_audio = quick
-			max_confidence = confidence
+			max_accuracy = accuracy
 	else:
 		for audio in catalog:
 			index = catalog[audio]
 			sdata = get_reference_data(index)
-			# print audio
-			confidence = find_match(sdata,tdata,tlen)
-			#filter: if confidence more than 50%, that is to say the it is same with the reference
-			if confidence >= 0.5:
-				return audio,confidence,avgdb
-			#filter:find the max confidence, and return
-			elif confidence > max_confidence:
-				match_audio = audio
-				max_confidence = confidence
-	return match_audio, max_confidence,avgdb
+
+			accuracy = find_match(sdata,tdata,tlen)
+			#filter: if accuracy more than 50%, that is to say the it is same with the reference
+			if accuracy >= 0.5:
+				return audio,accuracy,avgdb
+			#filter:find the max accuracy, and return
+			elif accuracy > max_accuracy:
+				match_audio  = audio
+				max_accuracy = accuracy
+
+	return match_audio, max_accuracy,avgdb
 
 
 #######################################################
@@ -154,29 +151,28 @@ def find_match(sdata,tdata,tlen):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-	min_seq=0
-	min_seq0=0
-	confidence=0
 
-	if tlen < 300:
+	if tlen < 200:
 		window_size = 3
 		offset = 1
-	elif 300 <= tlen <= 1000:
+	elif 200 <= tlen <= 1000:
 		window_size = 20
 		offset = 2
 	else:
-		window_size = 30
+		window_size = 100
 		offset = 3
 	slen = sdata.shape[-1]
 	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
 
-	#Old version
+	#Old version Python
 	#***********************************************************#
+	#***********************************************************#
+	min_seq=0
+	min_seq0=0
+	confidence=0
 	next_begain = 0
 	max_index = sdata.shape[-1]-window_size
-	# print tlen/window_size
 	stop_condition = 15
-	
 	threshold = window_size*FIN_BIT*0.3
 
 	#Arithmetic sequence tolerance uplimit and down limit
@@ -200,12 +196,11 @@ def find_match(sdata,tdata,tlen):
 				dismin  = dis
 				min_seq = index
 				if window_size >10 and dismin <= 70:break
-		# print "++ a:%d slen: %d  dismin: %d  minseq: %d  minseq0: %d"%(a,sdata.shape[-1],dismin,min_seq,min_seq0)
+
 		#filter:block distance is very close, and they are Arithmetic sequence
 		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
 			confidence += 1
 			next_begain = min_seq
-			# print "HaHa%d"%confidence
 		#filter:if search done,stop
 		if next_begain >= max_index:break
 		#filter:if confidence is too low,stop

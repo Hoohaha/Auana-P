@@ -1,1 +1,0 @@
-gcc --shared -I C:\Users\b51762\Desktop\Auana-P\auana\include find_match.c -o find_match.so
