@@ -1,5 +1,15 @@
 import numpy as np
 
+# import os
+# current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+# from ctypes import *
+# bro = cdll.LoadLibrary(current_directory+"/broken.so")
+# bro.broken_frame.argtypes = [np.ctypeslib.ndpointer(dtype=np.int16, ndim=1, flags="C_CONTIGUOUS"),
+# 							c_int,
+# 							np.ctypeslib.ndpointer(dtype=np.float, ndim=1), #
+# 							c_int]
+# bro.broken_frame.restype = c_int
+
 def detect_broken_frame(wdata,framerate):
 	'''
 	To detect broken frame.
@@ -38,6 +48,14 @@ def detect_broken_frame(wdata,framerate):
 			|
 	________|
 	'''
+	# num = 0
+	# bf = np.zeros(5)
+	# num = bro.broken_frame(wdata,len(wdata),bf,framerate)
+	# if num == 0:
+	# 	bf = []
+	# return list(bf)
+
+
 	FLAG = 0
 	DETECT_WIN = 256
 	VAR_THRESHOLD = 1000

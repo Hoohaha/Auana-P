@@ -96,11 +96,9 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 		if (confidence > 3)
 			_offset = offset;
 
-		if (i>20 && confidence < 3)break;//stop find
+		if (i>20 && confidence < 3)
+			return 0;//stop find
 	}
-
-	if (confidence <= 1)
-		return 0;
 
 	return ((float)(confidence))/(tlen/wsize-1);
 }

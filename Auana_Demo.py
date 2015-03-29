@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyaudio import PyAudio, paInt16
-import wave , sys , os
+import wave , sys , os, time
 import numpy as np
 
 _work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
@@ -8,6 +8,7 @@ sys.path.append(_work_dir)
 
 from auana import Auana
 
+print "***** Auana Demo Start *****\n"
 chunk = 1024
 channels = 2
 samplerate = 44100
@@ -16,7 +17,8 @@ format = paInt16
 
 pa = PyAudio()
 
-NUM = int((samplerate/float(chunk)) * 5)
+Time = 6
+NUM = int((samplerate*Time)/float(chunk))
 
 save_buffer = []    
 stream = pa.open(
@@ -39,8 +41,15 @@ while ("" == raw_input("Continue ?")):
     wave_data.shape = -1,2
     wave_data = wave_data.T
 
-    print "  Now Playing is: %s"%Auana().stereo(wave_data[0],wave_data[1],samplerate)[0].split(".")[0]
-    print "---------------------------------------------------------"
+    start = time.time()
+    name, confidence, db = Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    end = time.time() - start
+    if name is not None:
+        print "  Now Playing is: %s   confidence: %f"%(name.split(".")[0],confidence)
+    else:
+        print "  Not Found!"
+    print "-------------------------------------"
+    print "                    Time Cost: %.3f"%end
     print " \n"
 
     save_buffer = []

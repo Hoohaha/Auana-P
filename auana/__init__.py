@@ -29,7 +29,7 @@ class Auana(object):
 	def __del__(self):
 		pass
 
-	def broken_frame(self, wdata, channel, framerate):
+	def broken_frame(self, wdata, framerate):
 		broframe = detect_broken_frame(wdata, framerate)
 		return broframe
 
@@ -59,33 +59,22 @@ class Auana(object):
 
 		result={channel0:"",channel1:""}
 
-		#Analyze the channel0 first. 
+		#1> Analyze the channel0 first. 
 		result[channel0] = self.mono(wdata0,channel0,framerate)
-
-		#Analyze the channel1.
-		if result[channel0]["name"] is not None:
-			#'quick'means quick recognition.
-			result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
-		else:
-			#if channel0 not find, and we don`t find it in channel1.
-			result[channel1]={"name":None,"broken_frame":0,"confidence":0,"average_db":result[channel0]["average_db"]}
+		if result[channel0]["confidence"]>0.7:#if confidence is high, directly return
+			return result[channel0]["name"], result[channel0]["confidence"], result[channel0]["average_db"]
+		#2> Analyze the channel1.
+		#'quick'means quick recognition.
+		result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
 
 		#handle the result from channel0 and channel1.
 		average_db = round((result[channel0]["average_db"]+result[channel1]["average_db"])/2,1)
 		confidence = round((result[channel0]["confidence"]+result[channel1]["confidence"])/2,3)
 		
-		if result[channel0]["broken_frame"]!=0 and result[channel1]["broken_frame"]!=0:
-			for channels in  xrange(2):
-				print "+----------"
-				print "| channel:%d, detect a broken frame, in time:"%channels, result[channels]["broken_frame"]
-				print "+----------"
-			return "Broken Frame",average_db,0
-
-		elif (result[channel0]["name"]!=None) and (result[channel0]["name"] == result[channel1]["name"]):
-			return result[channel1]["name"], average_db, confidence
-
+		if (result[channel0]["name"]!=None) and (result[channel0]["name"] == result[channel1]["name"]):
+			return result[channel1]["name"], confidence ,average_db
 		else:
-			return "Not Found",average_db,0
+			return "Not Found",0, average_db
 
 class Fana(Auana):
 	'''

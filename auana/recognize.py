@@ -83,6 +83,16 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	match_audio    = None
 	tlen           = tdata.shape[-1]
 	
+
+	#according the data length, 
+	#give different window size and offset to make the search faster.
+	if tlen < 90:
+		window_size, offset = 4,   1
+	elif 90 <= tlen <= 900:
+		window_size, offset = 16,  2
+	else:
+		window_size, offset = 100, 3
+
 	def get_reference_data(index):
 		'''
 		This function load data acorrding the index.
@@ -98,11 +108,12 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 		sdata = np.fromfile(current_directory+"/data/"+index+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
 		return sdata[channel]
-	
+
+	#search
 	if quick is not None:
 		index = catalog[quick]
 		sdata = get_reference_data(index)
-		accuracy = find_match(sdata,tdata,tlen)
+		accuracy = find_match(sdata,tdata,tlen,window_size,offset)
 		if accuracy > 0.1:
 			match_audio = quick
 			max_accuracy = accuracy
@@ -111,7 +122,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 			index = catalog[audio]
 			sdata = get_reference_data(index)
 
-			accuracy = find_match(sdata,tdata,tlen)
+			accuracy = find_match(sdata,tdata,tlen,window_size,offset)
 			#filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				return audio,accuracy,avgdb
@@ -126,7 +137,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 #######################################################
 #    search function                                                                                                    
 #######################################################
-def find_match(sdata,tdata,tlen):
+def find_match(sdata,tdata,tlen,window_size,offset):
 	'''
 	Find the similar audio with target data.
 
@@ -152,15 +163,6 @@ def find_match(sdata,tdata,tlen):
 		exit and search next file.
 	'''
 
-	if tlen < 200:
-		window_size = 3
-		offset = 1
-	elif 200 <= tlen <= 1000:
-		window_size = 20
-		offset = 2
-	else:
-		window_size = 100
-		offset = 3
 	slen = sdata.shape[-1]
 	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
 
