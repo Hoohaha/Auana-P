@@ -1,4 +1,4 @@
-Auana-P Version 0.2
+Auana-P Version 0.3
 =======
 
 Auana-P: Auana algorithm Package.<br>
@@ -26,10 +26,10 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 
 ##How to use it to analysis a wave file?
 -----------------------------------
-    1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
-        The "Preprocess" is a class can be used to memory an audio charactics. The following example<br>
-        shows how to use it.
-    
+1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
+The "Preprocess" is a class can be used to memory an audio charactics. The following example<br>
+shows how to use it.
+
     For example:<br>
         from auana import Preprocess
         p=Preprocess
@@ -42,10 +42,10 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
         
         #clear all items. this functions should be used with caution.
         p.clean_up()
-            
-    2> Recognition: There are two calss. Auana and Fana.
-        Fana: File recognition(only support .wav)
-    
+   
+2> Recognition: There are two calss: Auana and Fana.<br>
+Fana: File recognition(only support .wav)<br>
+
     For example:<br>
         from auana import Fana
         
@@ -54,10 +54,10 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
         
         #stereo recognition
         print Fana("sample.wav").stereo_start()
-    
-    3> Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
-    It will tell you wheather the audi lost frames, and will return where lost it.
-    
+
+3> Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
+It will tell you wheather the audi lost frames, and will return where lost it.
+
     For example:<br>
         from auna import Fana
         #broken frame detection
@@ -65,14 +65,14 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 
 ##Demo User's Guide
 -----
-    1> Auana_Demo
-    This is a Demo for showing how to recognize the data from MIC. You can double click the "Auana_Demo.py" to run.
-    And then you can play a song and press "Enter" to make the demo to processing.
-    
-    2> Broken_Frame_Demo
-    Drag the sample into "BrokenFrameDemo.py". 
+1> Auana_Demo<br>
+This is a Demo for showing how to recognize the data from MIC. You can double click the "Auana_Demo.py" to run.<br>
+And then you can play a song and press "Enter" to make the demo to processing.
 
-##Simple Principle
+2> Broken_Frame_Demo<br>
+Drag the sample into "BrokenFrameDemo.py". 
+
+##Simple Theory
 -----
 ![1](doc/Slide2.PNG)
 ![2](doc/Slide2.PNG)
