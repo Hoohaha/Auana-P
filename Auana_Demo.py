@@ -13,14 +13,15 @@ chunk = 1024
 channels = 2
 samplerate = 44100
 format = paInt16
-#open audio stream
+
 
 pa = PyAudio()
 
-Time = 6
+Time = 7
 NUM = int((samplerate*Time)/float(chunk))
 
-save_buffer = []    
+save_buffer = []
+#open audio stream    
 stream = pa.open(
             format   = format, 
             channels = channels, 
@@ -44,7 +45,8 @@ while ("" == raw_input("Continue ?")):
     start = time.time()
     name, confidence, db = Auana().stereo(wave_data[0],wave_data[1],samplerate)
     end = time.time() - start
-    if name is not None:
+
+    if name != "Not Found":
         print "  Now Playing is: %s   confidence: %f"%(name.split(".")[0],confidence)
     else:
         print "  Not Found!"

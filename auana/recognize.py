@@ -107,22 +107,23 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 		'''
 		sdata = np.fromfile(current_directory+"/data/"+index+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
-		return sdata[channel]
+		slen = sdata.shape[-1]
+		return sdata[channel],slen
 
 	#search
 	if quick is not None:
 		index = catalog[quick]
-		sdata = get_reference_data(index)
-		accuracy = find_match(sdata,tdata,tlen,window_size,offset)
+		sdata,slen = get_reference_data(index)
+		accuracy = find_match(sdata,tdata,tlen,slen,window_size,offset)
 		if accuracy > 0.1:
 			match_audio = quick
 			max_accuracy = accuracy
 	else:
 		for audio in catalog:
 			index = catalog[audio]
-			sdata = get_reference_data(index)
+			sdata,slen = get_reference_data(index)
 
-			accuracy = find_match(sdata,tdata,tlen,window_size,offset)
+			accuracy = find_match(sdata,tdata,tlen,slen,window_size,offset)
 			#filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				return audio,accuracy,avgdb
@@ -137,7 +138,7 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 #######################################################
 #    search function                                                                                                    
 #######################################################
-def find_match(sdata,tdata,tlen,window_size,offset):
+def find_match(sdata,tdata,tlen,slen,window_size,offset):
 	'''
 	Find the similar audio with target data.
 
@@ -162,8 +163,6 @@ def find_match(sdata,tdata,tlen,window_size,offset):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-
-	slen = sdata.shape[-1]
 	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
 
 	#Old version Python
