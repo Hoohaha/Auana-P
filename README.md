@@ -74,8 +74,6 @@ Drag the sample into "BrokenFrameDemo.py".
 
 ##Simple Theory
 -----
-![1](doc/Slide2.PNG)
-![2](doc/Slide2.PNG)
 ![3](doc/Slide3.PNG)
 ![4](doc/Slide4.PNG)
 ![5](doc/Slide5.PNG)
