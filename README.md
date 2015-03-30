@@ -88,5 +88,5 @@ Drag the sample into "BrokenFrameDemo.py".
 --------------
 version 0.1.Auana Pacage. <br>
 version 0.2.Auana: designed by C and python.<br>
-version 0.3.Auana: Optimzie parameter about recognition to make it more reliable.
-version 0.4.Auana: New functions: return where the match songs is playing.
+version 0.3.Auana: Optimzie parameter about recognition to make it more reliable.<br>
+version 0.4.Auana: New functions: return where the match songs is playing.<br>
