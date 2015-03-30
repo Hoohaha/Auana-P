@@ -1,10 +1,10 @@
-Auana-P Version 0.3
+Auana-P Version 0.4
 =======
 
 Auana-P: Auana algorithm Package.<br>
 
 Auana is a light tool with the audio recognition based on python and c.It can easily find simialr audio which it heared before. And it can detect and analyze the audio file, such as: broken-frame, noise, volume etc.<br>
-Now Auana only support wav file. For the automation of audio validation, i don`t think that must be a bad solution. It is still in developing. If you are intereted in it, you can contact me.<br>
+Now Auana only support wav file. For the automation of audio validation, i don`t think that must be a bad solution. It is still in developing. If you are intereted in it, welcome to contact with me by Email.<br>
 
 ##Setup:
 -----------------------------------
@@ -88,4 +88,5 @@ Drag the sample into "BrokenFrameDemo.py".
 --------------
 version 0.1.Auana Pacage. <br>
 version 0.2.Auana: designed by C and python.<br>
-
+version 0.3.Auana: Optimzie parameter about recognition to make it more reliable.
+version 0.4.Auana: New functions: return where the match songs is playing.
