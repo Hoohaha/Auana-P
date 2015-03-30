@@ -9,12 +9,7 @@ except ImportError:
 
 _work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
-def _memory(wdata0,wdata1,framerate,index):
-	cache = []
-	cache.append(get_fingerprint(wdata=wdata0,framerate=framerate,db=False))
-	cache.append(get_fingerprint(wdata=wdata1,framerate=framerate,db=False))
-	np.array(cache,dtype=np.uint32).tofile(_work_dir+"/data/"+index+".bin")
-	del cache[:]
+
 
 class Auana(object):
 
@@ -22,63 +17,69 @@ class Auana(object):
 		try:
 			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
 			self.catalog = pickle.load(cfile)
+			cfile.close()
 		except EOFError:
-			self.catalog = {}
-		cfile.close()
+			print("Error: No data saved in pkl file." 
+			"Please fisrtly save the fingerprint of the reference audio.")
+			cfile.close()
+			self.__del__()
+			os._exit(1)
+			
 
 	def __del__(self):
 		pass
 
 	def broken_frame(self, wdata, framerate):
-		broframe = detect_broken_frame(wdata, framerate)
-		return broframe
+		return detect_broken_frame(wdata, framerate)
 
-	def mono(self,wdata,channel,framerate,quick=None):
+	def mono(self,wdata,channel,framerate):
 		'''
-		To improve the speed of recognition, we use the "quick" to do it.
-		If it matched an audio(example "source1.wav") in channel0, when search in channel1 we will directly
-		compare the matched audio("source1.wav"), rather than search all reference file again. 
-		'''
-		if len(self.catalog)==0:
-			print("Error: No data saved in pkl file." 
-				"Please fisrtly save the fingerprint of the reference audio.")
-			self.__del__()
-			os._exit(1)
-		broframe = 0
+		mono recognition
 
+		'''
 		#audio recognition
-		audio_name, confidence, avgdb = recognize(self.catalog,wdata,framerate,channel,quick)
-		#broken frame detection
-		# broframe=detect_broken_frame(wdata, framerate)
+		match_index, accuracy, avgdb, location = recognize(self.catalog,wdata,framerate,channel)
 
-		return {"name":audio_name,"broken_frame":broframe,"confidence":confidence,"average_db":avgdb}
+		return self.catalog[match_index],accuracy,avgdb,location
 
 	def stereo(self,wdata0,wdata1,framerate):
-		channel0 = 0
-		channel1 = 1
+		'''
+		stereo recognition
 
-		result={channel0:"",channel1:""}
+		It used the variable "Fast" to improve the speed of recognition. If left channel we matched 
+		an audio(example "source1.wav") in firstly, then search in next channel it will compare the 
+		matched audio("source1.wav"),rather than search all reference file again.
 
-		#1> Analyze the channel0 first. 
-		result[channel0] = self.mono(wdata0,channel0,framerate)
-		if result[channel0]["confidence"]>0.7:#if confidence is high, directly return
-			return result[channel0]["name"], result[channel0]["confidence"], result[channel0]["average_db"]
-		#2> Analyze the channel1.
-		#'quick'means quick recognition.
-		result[channel1]=self.mono(wdata1,channel1,framerate,quick=result[channel0]["name"])
+		Especially, if the accuracy is high enough, we will don't need to search in another channel. 
+		'''
+		chann0 = 0
+		chann1 = 1
 
-		#handle the result from channel0 and channel1.
-		average_db = round((result[channel0]["average_db"]+result[channel1]["average_db"])/2,1)
-		confidence = round((result[channel0]["confidence"]+result[channel1]["confidence"])/2,3)
-		
-		if (result[channel0]["name"]!=None) and (result[channel0]["name"] == result[channel1]["name"]):
-			return result[channel1]["name"], confidence ,average_db
+		#1> Analyze the chann0 first. 
+		index_L, accuracy_L, avgdb_L, location_L= recognize(self.catalog,wdata0,framerate,chann0,Fast=None)
+		#if accuracy is high enough, directly return
+		if accuracy_L>0.7:
+			return self.catalog[index_L], accuracy_L, avgdb_L, location_L
+		#2> Analyze the chann1. 'Fast'means Fast recognition.
+		index_R, accuracy_R, avgdb_R, location_R = recognize(self.catalog,wdata1,framerate,chann1,Fast=index_L)
+
+		#handle the result from chann0 and chann1.
+		accuracy   = round((accuracy_L+accuracy_R)/2,3)
+		average_db = round((avgdb_L+avgdb_R)/2,3)
+		if accuracy_L > accuracy_R:
+			location = location_L
 		else:
-			return "Not Found",0, average_db
+			location = location_R
+		if (index_L != None) and (index_L == index_R):
+			return self.catalog[index_L], accuracy ,average_db, location
+		else:
+			return None,0, average_db, 0
+
 
 class Fana(Auana):
 	'''
 	Fana: File Analysis
+	Now only support wav format.
 	'''
 	def __init__(self,filepath):	
 		Auana.__init__(self)
@@ -124,42 +125,12 @@ class Fana(Auana):
 					print "| channel:%d, detect a broken frame, in time:"%1, item
 					print "+----------"
 
-#developing...
-def MicAnalyis(Auana):
-	def __init__(self):
-		Auana.__init__(self)
 
-		CHUNK         = 4096
-		FORMAT        = paInt16
-		CHANNELS      = 2
-		SAMPLING_RATE = 44100
 
-		#open audio stream
-		pa = PyAudio()
-		stream = pa.open(
-						format   = FORMAT, 
-						channels = CHANNELS, 
-						rate     = SAMPLING_RATE, 
-						input    = True,
-						frames_per_buffer  = CHUNK
-						)
 
-	def __del__(self):
-		pass
-	def start(self):
-		pass
 
-	def stop(self):
-		pass
-	def record(self):
-		while True:
-			queue.put(stream.read(CHUNK))
-	def volume(self):
-		data = queue.get()
-		xs   = np.multiply(data, signal.hann(DEFAULT_FFT_SIZE, sym=0))
-		#fft transfer
-		xfp  = 20*np.log10(np.abs(np.fft.rfft(xs)))
-		db   = np.sum(xfp[0:200])/200
+##################################################################################################
+
 
 
 class Preprocess:
@@ -173,36 +144,45 @@ class Preprocess:
 
 	def hear(self,filepath):
 		'''
-		catalog = {"sample.wav":index}
+		catalog = {index:"sample.wav"}
 		'''
 		filename = os.path.basename(filepath)
-		#judge the file if saved before.
-		if self.catalog.has_key(filename):
-			print "\"%s\" Have heared before!"%filename
-			return "continue.."
+		index = len(self.catalog)
 
-		index = str(len(self.catalog))
+		print ("FILE: << %s >>\n        IS PROCESSING....")%(filename)
 
-		#creat .bin file
-		dfile = open(_work_dir+"/data/"+index+".bin", 'w+')
-		dfile.close()
+		for i in self.catalog:
+			if self.catalog[i] == filename:
+				print "  NOTICE: This File Has Been Saved Before!"
+				return
 
+
+		#Get data from wav file
 		wf = wave.open(filepath, 'rb')
 		nchannels, sampwidth, framerate, nframes = wf.getparams()[:4]
 		wave_data = np.fromstring(wf.readframes(nframes), dtype = np.short)
-		wave_data.shape = -1,2
-		wave_data = wave_data.T #transpose
 		wf.close()
+		#Prepare data
+		wave_data.shape = -1,2
+		wave_data = wave_data.T#transpose
 
-		#save data
-		_memory(wave_data[0],wave_data[1],framerate,index)
+		cache = []
+		cache.append(get_fingerprint(wdata=wave_data[0],framerate=framerate,db=False))
+		cache.append(get_fingerprint(wdata=wave_data[1],framerate=framerate,db=False))#Compute charatics
 
-		#update catalog
-		self.catalog.update({filename:index})
+		#Creat .bin file
+		bin_path = "%s%s%s%s"%(_work_dir,"/data/",str(index),".bin")
+		dfile = open(bin_path, 'w+')
+		np.array(cache,dtype=np.uint32).tofile(bin_path)
+		dfile.close()
+		del cache[:]
+		
+		#Update catalog
+		self.catalog.update({index:filename})
 		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
 		pickle.dump(self.catalog, cfile)
 		cfile.close()
-		print "Hear/Save Done"
+		print "HEAR<SAVE> DONE!"
 
 	def clean_up(self):
 		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')
@@ -214,14 +194,14 @@ class Preprocess:
 		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
 		pickle.dump(self.catalog, cfile)
 		cfile.close()
-		print "Already forgot <<%s>>!"%filename
+		print "Already forgot << %s >>!"%filename
 	
 	def items(self):
 		#sort dict, te is a tuple 
-		te = sorted(self.catalog.iteritems(),key=lambda asd:asd[1],reverse=False)
+		te = sorted(self.catalog.iteritems(),key=lambda d:d[0],reverse=False)
 		print "******* File List *******"
 		print "Total:%d"%len(self.catalog)
 		print " No.","    ","File Name"
 		for item in te:
-			print "  %s       %s"%(item[1],item[0])
+			print "  %s       %s"%(item[0],item[1])
 		print "***********************"

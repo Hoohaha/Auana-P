@@ -3,16 +3,17 @@ import time,os
 
 p = Preprocess()
 
-start = time.time()
-# #sample test
+
+#Memory the folder
 sample_path = "E:/FFOutput"
 for parent, dirnames, filenames in os.walk(sample_path):
 	for filename in filenames:
 		if os.path.splitext(filename)[1] == '.wav':
 			filepath = os.path.join(parent, filename).replace('\\','/')
+			start = time.time()
 			p.hear(filepath)
+			end = time.time() - start
+			print "time cost %f \n"%end
 			print " "
-end = start - time.time()
-print "time cost",end/60
+
 p.items()
-# res = Fana(filepath).stereo_start()

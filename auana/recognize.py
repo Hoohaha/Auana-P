@@ -4,14 +4,20 @@ import numpy as np
 import os
 current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 from ctypes import *
+
+class MATCH_INFO(Structure):
+    _fields_ = [("accuracy", c_float),
+                ("location", c_float)]
+
 ham = cdll.LoadLibrary(current_directory+"/find_match.so")
 ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 						   c_int,
 						   c_int,
 						   c_int,
-						   c_short]
-ham.find_match.restype = c_float
+						   c_short,
+						   ]
+ham.find_match.restype = MATCH_INFO
 
 #How many data in fft process, this value must be 2^n. 
 DEFAULT_FFT_SIZE = 4096
@@ -29,7 +35,7 @@ BandTable = {1: [0  ,   8],  2: [4  ,  12],  3: [8  ,  17],  4: [12 ,  22],
 			25: [195, 226], 26: [210, 244], 27: [226, 262], 28: [244, 282], 
 			29: [262, 302], 30: [282, 324], 31: [302, 347], 32: [324, 372]}
 
-def recognize(catalog,wdata,framerate,channel,quick=None):
+def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	'''
 	This function is audio recognition.
 	
@@ -45,12 +51,16 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	wdata: wave data                                Type:[array]
 	sdata: source data(reference data)				Type:[list]
 	framerate: sample rate							Type:[int]
+	channel: wave channel                           Type:[int]
+	Fast: Faster recognize(defualt value is None)   Type:[int]
+	return_cha: wheather return the charatics
+				which has beeb computed             Type:[array]
 
 	Returns
     ----------
-	match_audio: the real audio name.                Type:[string]
-	max_accuracy: accuracy						 Type:[float]
-	avgdb: average Volume                            Type:[float]
+	match_index: matched song's index.              Type:[int]
+	max_accuracy: accuracy						 	Type:[float]
+	avgdb: average Volume                           Type:[float]
 
 	Data storage format
 	----------
@@ -61,10 +71,10 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 
 				AudioFingerCatalog.pkl
 				   	{
-				   	'sample0.wav':index0,
-				   	'sample1.wav':index1,
+					0:'sample0.wav',
+				   	1:'sample1.wav',
 				   			...
-				   	'samplen.wav':indexn
+				   	indexN:'samplen.wav',
 				   	}
 
 				index0.yml
@@ -74,13 +84,13 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 	----------
 	step1: get the fingerprint of wave data
 	step2: compare the target fingerprint with the sdata, 
-		   and return the confidence(accuarce) and matched audio name.
-		   confidence: 0~1, it means the how many fingerprint matched in reference file.
+		   and return the accuarcy and matched audio index.
+		   accuarcy: 0~1, it means the how many fingerprint matched in reference file.
 	'''
 
 	tdata,avgdb    = get_fingerprint(wdata,framerate)
 	max_accuracy   = 0
-	match_audio    = None
+	match_index    = None
 	tlen           = tdata.shape[-1]
 	
 
@@ -104,35 +114,40 @@ def recognize(catalog,wdata,framerate,channel,quick=None):
 		Returns
 	    ----------
 		sdata: source data.                				 Type:[array]
+		slen: source data length                         Type:[int]
 		'''
-		sdata = np.fromfile(current_directory+"/data/"+index+".bin",dtype=np.uint32)
+		sdata = np.fromfile(current_directory+"/data/"+str(index)+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
 		slen = sdata.shape[-1]
 		return sdata[channel],slen
 
 	#search
-	if quick is not None:
-		index = catalog[quick]
-		sdata,slen = get_reference_data(index)
-		accuracy = find_match(sdata,tdata,tlen,slen,window_size,offset)
+	if Fast is not None:
+		sdata,slen = get_reference_data(Fast)
+		accuracy,location = find_match(sdata,tdata,tlen,slen,window_size,offset)
 		if accuracy > 0.1:
-			match_audio = quick
+			match_index = Fast
 			max_accuracy = accuracy
 	else:
-		for audio in catalog:
-			index = catalog[audio]
+		for index in catalog:
 			sdata,slen = get_reference_data(index)
 
-			accuracy = find_match(sdata,tdata,tlen,slen,window_size,offset)
+			accuracy,location = find_match(sdata,tdata,tlen,slen,window_size,offset)
 			#filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
-				return audio,accuracy,avgdb
+				match_index  = index
+				max_accuracy = accuracy
+				break
 			#filter:find the max accuracy, and return
 			elif accuracy > max_accuracy:
-				match_audio  = audio
+				match_index  = index
 				max_accuracy = accuracy
 
-	return match_audio, max_accuracy,avgdb
+	#return_cha: if this variable is set True, we will return the charatics data.
+	if return_cha is True:
+		return match_index, tdata
+	#Else we will return match_audio max_accuracy, avgdb
+	return match_index, max_accuracy, avgdb, location
 
 
 #######################################################
@@ -163,8 +178,8 @@ def find_match(sdata,tdata,tlen,slen,window_size,offset):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-	return ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
-
+	r = ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
+	return r.accuracy, r.location
 	#Old version Python
 	#***********************************************************#
 	#***********************************************************#

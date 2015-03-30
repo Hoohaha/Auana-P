@@ -1,5 +1,13 @@
 #include "find_match.h"
 
+
+struct match_info
+{
+	float accuarcy;
+	float location;
+	/* data */
+};
+
 /*!
  * @brief Hamming weight
  *
@@ -32,12 +40,14 @@ int hamming_weight(uint32 x)
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
  */
-float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
+struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
 {
 	short _offset=1,temp=0,confidence=0;
 	register int n=0,i=0,index=0;
 	int max_index=0, next_begain=0;
 	int dismin=0, dis=0, min_seq=0, min_seq0=0;
+
+	struct match_info m = {0,0};
 
 	const uint32 m1  = 0x55555555; //binary: 0101...  	
 	const uint32 m2  = 0x33333333; //binary: 00110011..  
@@ -53,12 +63,12 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 
 	// printf(">>>>>>>>>>>>>>>>>%d  %d  %d %d\n",wsize,slen,dw_limit,up_limit);//For Debug
 
-	for(i=0; i<(tlen/wsize); i++)
+	for(i=0; i<(tlen/wsize); i++)//target file
 	{
 		dismin   = Threshold;
 		min_seq0 = min_seq;
 
-		for(index = next_begain; index<max_index; index += _offset)
+		for(index = next_begain; index<max_index; index += _offset)//source file
 		{	
 			//compute the distance of two buffer
 			dis = 0;
@@ -75,7 +85,7 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 				if (dis > dismin) break;
 			}
 
-			//get min distance
+			//get min distance and the index in source data
 			if (dis < dismin)
 			{
 				dismin  = dis;
@@ -97,10 +107,17 @@ float find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, sho
 			_offset = offset;
 
 		if (i>20 && confidence < 3)
-			return 0;//stop find
+			return m;//stop find
 	}
-
-	return ((float)(confidence))/(tlen/wsize-1);
+	m.accuarcy = ((float)(confidence))/(tlen/wsize-1);
+	if (m.accuarcy < 0.1)
+		{
+			m.accuarcy = 0;
+			return m;
+		}
+	else
+		m.location = ((next_begain+1)*2048)/(44100.0);
+		return m;
 }
 
 //For test
