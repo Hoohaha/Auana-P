@@ -3,8 +3,10 @@ Auana-P Version 0.4
 
 Auana-P: Auana algorithm Package.<br>
 
-Auana is a light tool with the audio recognition based on python and c.It can easily find simialr audio which it heared before. And it can detect and analyze the audio file, such as: broken-frame, noise, volume etc.<br>
-Now Auana only support wav file. For the automation of audio validation, i don`t think that must be a bad solution. It is still in developing. If you are intereted in it, welcome to contact with me by Email.<br>
+Auana is a open source, light tool with the audio recognition and some basic analysis algorithms, it is based on python and c. Auana can easily find simialr audio which it heared before, and tell the user the place where the songs is playing. Broken-Frame, Volume detection also is it`s strength.<br>
+Auana support microphone records and file analysis. File analysis only support "wav" file for now. 
+At first, Auana is designed for audio validition. This is because pepole need to check musics/songs by manually. 
+So for the automation of audio validation, it may be a good idea. It is still in developing. If you are intereted in it, welcome to contact with me by Email.<br>
 
 ##Setup:
 -----------------------------------
@@ -24,7 +26,7 @@ Now Auana only support wav file. For the automation of audio validation, i don`t
 9.Detect noise                                                [will]<br>
 
 
-##How to use it to analysis a wave file?
+##Quickly Start
 -----------------------------------
 1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
 The "Preprocess" is a class can be used to memory an audio charactics. The following example<br>
