@@ -1,5 +1,5 @@
 Auana-P Version 0.4
-=======
+#
 
 Auana-P: Auana algorithm Package.<br>
 
@@ -15,24 +15,23 @@ So for the automation of audio validation, it may be a good idea. It is still in
 
 ##Features:
 -----------------------------------
-1.Broken-frame detection                                      [support]<br>
-2.Sound recognition                                           [support]<br>
-3.Volume value detection                                      [support]<br>
-4.Audio play and record                                       [support]<br>
-5.Signal noise ratio detection                                [will]<br>
-6.Real time detection and analysis                            [will]<br>
-7.Support mp3 ,wma…etc                                        [will]<br>
-8.Detect the sound error caused by device clock frequency     [will]<br>
-9.Detect noise                                                [will]<br>
+>1.Broken-frame detection                                      [support]<br>
+>2.Sound recognition                                           [support]<br>
+>3.Volume value detection                                      [support]<br>
+>4.Audio play and record                                       [support]<br>
+>5.Signal noise ratio detection                                [will]<br>
+>6.Real time detection and analysis                            [will]<br>
+>7.Support mp3 ,wma…etc                                        [will]<br>
+>8.Detect noise                                                [will]<br>
 
 
 ##Quickly Start
 -----------------------------------
 1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
 The "Preprocess" is a class can be used to memory an audio charactics. The following example<br>
-shows how to use it.
-
-    For example:<br>
+shows how to use it.<br>
+For example:<br>
+```python
         from auana import Preprocess
         p=Preprocess
         
@@ -44,11 +43,11 @@ shows how to use it.
         
         #clear all items. this functions should be used with caution.
         p.clean_up()
-   
+```   
 2> Recognition: There are two calss: Auana and Fana.<br>
 Fana: File recognition(only support .wav)<br>
-
-    For example:<br>
+For example:<br>
+```python
         from auana import Fana
         
         #mono recognition
@@ -56,15 +55,15 @@ Fana: File recognition(only support .wav)<br>
         
         #stereo recognition
         print Fana("sample.wav").stereo_start()
-
+```
 3> Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
-It will tell you wheather the audi lost frames, and will return where lost it.
-
-    For example:<br>
+It will tell you wheather the audi lost frames, and will return where lost it.<br>
+For example:<br>
+```python
         from auna import Fana
         #broken frame detection
         Fana("sample.wav").broken_frame()
-
+```
 ##Demo User's Guide
 -----
 1> Auana_Demo<br>
