@@ -7,7 +7,7 @@ from ctypes import *
 
 class MATCH_INFO(Structure):
     _fields_ = [("accuracy", c_float),
-                ("location", c_float)]
+                ("position", c_int)]
 
 ham = cdll.LoadLibrary(current_directory+"/find_match.so")
 ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
@@ -124,7 +124,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	#search
 	if Fast is not None:
 		sdata,slen = get_reference_data(Fast)
-		accuracy,location = find_match(sdata,tdata,tlen,slen,window_size,offset)
+		accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset)
 		if accuracy > 0.1:
 			match_index = Fast
 			max_accuracy = accuracy
@@ -132,7 +132,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		for index in catalog:
 			sdata,slen = get_reference_data(index)
 
-			accuracy,location = find_match(sdata,tdata,tlen,slen,window_size,offset)
+			accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset)
 			#filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				match_index  = index
@@ -147,7 +147,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	if return_cha is True:
 		return match_index, tdata
 	#Else we will return match_audio max_accuracy, avgdb
-	return match_index, max_accuracy, avgdb, location
+	return match_index, max_accuracy, avgdb, position
 
 
 #######################################################
@@ -179,7 +179,7 @@ def find_match(sdata,tdata,tlen,slen,window_size,offset):
 		exit and search next file.
 	'''
 	r = ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
-	return r.accuracy, r.location
+	return r.accuracy, r.position
 	#Old version Python
 	#***********************************************************#
 	#***********************************************************#

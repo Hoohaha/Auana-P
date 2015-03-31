@@ -4,7 +4,7 @@
 struct match_info
 {
 	float accuarcy;
-	float location;
+	int position;
 	/* data */
 };
 
@@ -116,7 +116,7 @@ struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, in
 			return m;
 		}
 	else
-		m.location = ((next_begain+1)*2048)/(44100.0);
+		m.position = ((next_begain+1)*2048)/(44100);
 		return m;
 }
 

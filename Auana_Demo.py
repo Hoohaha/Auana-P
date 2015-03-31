@@ -43,11 +43,11 @@ while ("" == raw_input("Continue ?")):
     wave_data = wave_data.T
 
     start = time.time()
-    name, confidence, db, location= Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position= Auana().stereo(wave_data[0],wave_data[1],samplerate)
     end = time.time() - start
 
-    if name != "Not Found":
-        print "  Now Playing is: %s   confidence: %.2f   location: %.2f"%(name.split(".")[0],confidence,location)
+    if name is not None:
+        print "  Now Playing is: %s   confidence: %.2f   position: %d'%d "%(name.split(".")[0],confidence,position/60,position%60)
     else:
         print "  Not Found!"
     print "-------------------------------------"
