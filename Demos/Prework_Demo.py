@@ -3,6 +3,10 @@ import time,os
 
 p = Preprocess()
 
+print "  Pre Work Demo"
+print "This demo will extracct the informations from reference files and save them. \n For Recognitions, this is necessary."
+print "Caution: 1> This demo will find \".wav\" in path<sample_path>."
+print "         2> The sample rate of mucics or songs must be 44100, format must be \".wav\"."
 
 #Memory the folder
 sample_path = "E:/FFOutput"

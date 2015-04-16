@@ -8,7 +8,8 @@ sys.path.append(_work_dir)
 
 from auana import Auana
 
-print "***** Auana Demo Start *****\n"
+print " Mic Recognition Demo\n"
+
 chunk = 1024
 channels = 2
 samplerate = 44100

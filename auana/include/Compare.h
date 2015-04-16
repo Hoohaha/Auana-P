@@ -4,7 +4,7 @@
 #include <string.h>
 /*
  * Author: Haley Guo, Date: 2015.1.8
- * version:0.1
+ * version:0.2
  *
  */
 typedef unsigned __int32 uint32;  //assume this gives 64-bits  
