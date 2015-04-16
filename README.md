@@ -1,9 +1,10 @@
 Auana-P Version 0.4
+
+
+#Auana-P: Auana algorithm Python Package.<br>
 ########################
 
-Auana-P: Auana algorithm Python Package.<br>
-
-Auana is a open source, light tool with the audio recognition and some basic analysis algorithms, and it try to provide a professional audio recognition solutions for python. Auana was designed by python and c(core algorithm). So not only it is fast enough,  but also it can easily find the simialr references which it heared before, and would tell the user the position where the songs is playing. In addition, Broken-Frame, Volume detection also is it's strength.<br>
+Auana is a open source, light tool with the audio recognition and basic analysis algorithms, it try to provide a professional audio recognition solutions for python. Auana was designed by python and c(core algorithm). So it is fast enough, it can easily find the simialr references which it heared before, and would tell the user the position where the songs is playing. In addition, Broken-Frame, Volume detection also is it's strength.<br>
 Auana support microphone records and file analysis. File analysis only support "wav" file for now. 
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
 So for the automation of audio validation, it may be a good idea. It is still in developing. If you are intereted in it, welcome to contact me by Email.<br>
