@@ -1,15 +1,41 @@
 from recognize import recognize,get_fingerprint
 from broframe import detect_broken_frame
-import wave, time, os, re
+import wave, time, os
 import cPickle as pickle
 try:
 	import numpy as np
 except ImportError:
 	print("Please build and install the numpy Python ")
 
+"""
+=======================================
+Auana: An Audio Data Analyze Algorithm
+=======================================
+
+auana(base)
+===========
+
+   broken_frame    	-- broken frame detection.
+   mono   			-- mono recognize.
+   stereo 			-- stereo recognize.
+
+Fana(Auana From File)               
+=========
+
+	broken_frame   	-- broken frame detection.
+   	mono_start   	-- mono recognize.
+   	stereo_start 	-- stereo recognize.
+
+
+Preprocess(Pre work before Analyze)
+=========
+	hear            -- Hear a song and save the info.
+	clean_up		-- Delete all data
+	forgot          -- Delete a specify song's infomation
+	itmes			-- Show the items which was saved in it's internal.
+"""
+
 _work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
-
 
 class Auana(object):
 
@@ -70,6 +96,7 @@ class Auana(object):
 			location = location_L
 		else:
 			location = location_R
+		location = location*2048/44100
 		if (index_L != None) and (index_L == index_R):
 			return self.catalog[index_L], accuracy ,average_db, location
 		else:

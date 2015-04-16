@@ -1,7 +1,13 @@
 from auana import Fana, Preprocess
 import os,time
 
-'''*************************************Function Example**********************************'''
+'''
+*************************************Function Example**********************************
+This file shows that how to use the auana to achieve our functions.
+Pre process: you must save some musics or voices before Fana or others.
+Fana: Means File analysis.
+'''
+
 #get the directory
 work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
@@ -21,15 +27,7 @@ p.hear(work_dir+"/sample/piano.wav")
 
 
 
-# '''==================File Analysis==============='''
+'''==================File Analysis==============='''
 
 
-# #sample test
-# sample_path = work_dir+"/sample"
-# for parent, dirnames, filenames in os.walk(sample_path):
-# 	for filename in filenames:
-# 		if os.path.splitext(filename)[1] == '.wav':
-# 			filepath = os.path.join(parent, filename).replace('\\','/')
-# 			start = time.clock()
-# 			res = Fana(filepath).stereo_start()#File analysis
-# 			print (filepath, res,time.clock()-start)
+res = Fana("sample.wav").stereo_start()#File analysis

@@ -9,15 +9,15 @@ class MATCH_INFO(Structure):
     _fields_ = [("accuracy", c_float),
                 ("position", c_int)]
 
-ham = cdll.LoadLibrary(current_directory+"/find_match.so")
-ham.find_match.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
+ham = cdll.LoadLibrary(current_directory+"/Compare.so")
+ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 						   c_int,
 						   c_int,
 						   c_int,
 						   c_short,
 						   ]
-ham.find_match.restype = MATCH_INFO
+ham.Compare.restype = MATCH_INFO
 
 #How many data in fft process, this value must be 2^n. 
 DEFAULT_FFT_SIZE = 4096
@@ -92,7 +92,6 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	max_accuracy   = 0
 	match_index    = None
 	tlen           = tdata.shape[-1]
-	
 
 	#according the data length, 
 	#give different window size and offset to make the search faster.
@@ -178,7 +177,7 @@ def find_match(sdata,tdata,tlen,slen,window_size,offset):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-	r = ham.find_match(tdata,sdata,tlen,slen,window_size,offset)
+	r = ham.Compare(tdata,sdata,tlen,slen,window_size,offset)
 	return r.accuracy, r.position
 	#Old version Python
 	#***********************************************************#
@@ -249,7 +248,7 @@ def get_fingerprint(wdata,framerate,db=True):
 
 	hanning = _hann(DEFAULT_FFT_SIZE, sym=0)
 
-	while (data_len-end) > DEFAULT_FFT_SIZE:
+	while end<data_len:
 		#generate a frame and get it`s fingerprint
 		#hanning window to smooth the edge
 		xs = np.multiply(wdata[sta:end], hanning)
@@ -277,7 +276,7 @@ def get_fingerprint(wdata,framerate,db=True):
 			for b in xrange(b0,b1+1):
 				#calculate the Audio center of mass 
 				fp = xfp[b]
-				p1 += fp*(b**1.00015)
+				p1 += fp*b
 				p2 += fp
 				num += 1
 			#calculate the average volume of one fingerprint

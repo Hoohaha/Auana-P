@@ -1,4 +1,4 @@
-#include "find_match.h"
+#include "Compare.h"
 
 
 struct match_info
@@ -40,10 +40,12 @@ int hamming_weight(uint32 x)
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
  */
-struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
+struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
 {
-	short _offset=1,temp=0,confidence=0;
 	register int n=0,i=0,index=0;
+	
+	short _offset=1,temp=0,confidence=0;
+
 	int max_index=0, next_begain=0;
 	int dismin=0, dis=0, min_seq=0, min_seq0=0;
 
@@ -56,7 +58,7 @@ struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, in
 	uint32 x;
 
 	int Threshold, dw_limit, up_limit;
-	Threshold = (int)((wsize<<5)*0.3);
+	Threshold = (int)(wsize * 10);
 	dw_limit = wsize-1;
 	up_limit = wsize+2;
 	max_index = slen - wsize;
@@ -81,7 +83,6 @@ struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, in
     			x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits   
     			x = (x * h01)>>24;              //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24)
     			dis += x;
-				// dis += hamming_weight(tData[wsize*i + n] ^ sData[wsize+index+n]);
 				if (dis > dismin) break;
 			}
 
@@ -90,20 +91,18 @@ struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, in
 			{
 				dismin  = dis;
 				min_seq = index;
-				if (wsize>10  && dismin<=70) break;
 			}
 		}
 
 		temp = min_seq-min_seq0;
 		
-		if ((dismin<Threshold) && temp>=dw_limit && temp<=up_limit)
+		if (dismin<Threshold && temp>=dw_limit && temp<=up_limit)
 		{
 			// printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
-			confidence += 1;
+			confidence ++;
 			next_begain = min_seq;
-			_offset = 1;
 		}
-		if (confidence > 3)
+		if (confidence == 6)
 			_offset = offset;
 
 		if (i>20 && confidence < 3)
@@ -116,7 +115,7 @@ struct match_info find_match(uint32 *tData,uint32 *sData, int tlen, int slen, in
 			return m;
 		}
 	else
-		m.position = ((next_begain+1)*2048)/(44100);
+		m.position = next_begain+1;//((next_begain+1)*2048)/(44100);
 		return m;
 }
 
