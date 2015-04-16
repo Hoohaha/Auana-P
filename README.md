@@ -1,18 +1,21 @@
-Auana-P Version 0.4
+Auana-P Version 0.5
 
 
 #Auana-P:Auana algorithm Python Package<br>
 ########################
 
-Auana is a open source, light tool with the audio recognition and basic analysis algorithms, it try to provide a professional audio recognition solutions for python. Auana was designed by python and c(core algorithm). So it is fast enough, it can easily find the simialr references which it heared before, and would tell the user the position where the songs is playing. In addition, Broken-Frame, Volume detection also is it's strength.<br>
-Auana support microphone records and file analysis. File analysis only support "wav" file for now. 
+Auana is a open source, free and light tool with the audio recognition and basic analysis algorithms. It try to provide a professional audio recognition solutions for python. <br>
+It was designed by python and c(core algorithm). So it is fast enough, it can easily find the simialr references which it heared before, the progress just like human. And also it will tell the user the position where the songs is playing. 
+Auana support microphone records and file analysis. File analysis only support "wav" file for now. In addition, it also provide the functions: Broken-Frame detection and Volume value detection.<br>
+
+Except using for recognitions, it will more focus on audio signal analysis. 
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
 So for the automation of audio validation, it may be a good idea. It is still in developing. If you are intereted in it, welcome to contact me by Email.<br>
 
 ##Setup:
 -----------------------------------
-*  Firstly, install "numpy"    (math tool)<br>
-*  Besides, install "pyaudio"  (record audio or play audio)[option]<br>
+*  Firstly, install python package "numpy"    (math tool)<br>
+*  Besides, install python package "pyaudio"  (audio play/record library)<br>
 
 ##Features:
 -----------------------------------
@@ -21,9 +24,8 @@ So for the automation of audio validation, it may be a good idea. It is still in
 >3.Volume value detection                                      [support]<br>
 >4.Audio play and record                                       [support]<br>
 >5.Signal noise ratio detection                                [will]<br>
->6.Real time detection and analysis                            [will]<br>
->7.Support mp3 ,wma…etc                                        [will]<br>
->8.Detect noise                                                [will]<br>
+>6.Support mp3 ,wma…etc                                        [will]<br>
+>7.Detect noise                                                [will]<br>
 
 
 ##Quickly Start
@@ -86,9 +88,12 @@ Drag the sample into "BrokenFrameDemo.py".
 ##Performance
 -----
 
+
+
 ##Version modification
 --------------
 version 0.1.Auana Pacage. <br>
 version 0.2.Auana: designed by C and python.<br>
 version 0.3.Auana: Optimzie parameter about recognition to make it more reliable.<br>
 version 0.4.Auana: New functions: return where the match songs is playing.<br>
+version 0.5.Auana: Optimize the get_fingerprint algoritms<br>
