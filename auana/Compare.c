@@ -1,12 +1,6 @@
 #include "Compare.h"
 
 
-struct match_info
-{
-	float accuarcy;
-	int position;
-	/* data */
-};
 
 /*!
  * @brief Hamming weight
@@ -39,8 +33,9 @@ int hamming_weight(uint32 x)
  *        slen: sData length
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
+ *		  num_win: numbers of window
  */
-struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset)
+struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset, int num_win)
 {
 	register int n=0,i=0,index=0;
 	
@@ -108,15 +103,22 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 		if (i>20 && confidence < 3)
 			return m;//stop find
 	}
-	m.accuarcy = ((float)(confidence))/(tlen/wsize-1);
-	if (m.accuarcy < 0.1)
+
+	if(confidence<1)
+	{
+		m.accuarcy = 0;
+		return m;
+	}
+	else
+	{
+		m.accuarcy = ((float)(confidence+1))/num_win;
+		if (m.accuarcy < 0.1)
 		{
 			m.accuarcy = 0;
-			return m;
 		}
-	else
-		m.position = next_begain+1;//((next_begain+1)*2048)/(44100);
+		m.position = next_begain+1;
 		return m;
+	}
 }
 
 //For test

@@ -1,5 +1,8 @@
-from auana import Fana
 import sys, os
+_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(_work_dir))
+from auana import Fana
+
 
 if __name__ == '__main__':
 	print "   Broken Frame Demo Start   "

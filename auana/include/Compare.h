@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+struct match_info
+{
+	float accuarcy;
+	int position;
+	/* data */
+};
 /*
  * Author: Haley Guo, Date: 2015.1.8
  * version:0.2
@@ -30,5 +38,6 @@ int hamming_weight(uint32 x);
  *        slen: sData length
  *        wsize: How many data need to search in a cycle.
  *        offset: window move.
+ *		  num_win: numbers of window
  */
-struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offsetm);
+struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset, int num_win);

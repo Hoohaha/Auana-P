@@ -1,5 +1,8 @@
+import time, os, sys
+_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(_work_dir))
 from auana import Preprocess
-import time,os
+
 
 p = Preprocess()
 

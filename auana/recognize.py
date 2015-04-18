@@ -16,6 +16,7 @@ ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C
 						   c_int,
 						   c_int,
 						   c_short,
+						   c_int,
 						   ]
 ham.Compare.restype = MATCH_INFO
 
@@ -91,6 +92,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	tdata,avgdb    = get_fingerprint(wdata,framerate)
 	max_accuracy   = 0
 	match_index    = None
+	match_position = 0
 	tlen           = tdata.shape[-1]
 
 	#according the data length, 
@@ -101,6 +103,8 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		window_size, offset = 16,  2
 	else:
 		window_size, offset = 100, 3
+
+	num_win = tlen/window_size;
 
 	def get_reference_data(index):
 		'''
@@ -123,36 +127,39 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	#search
 	if Fast is not None:
 		sdata,slen = get_reference_data(Fast)
-		accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset)
+		accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset,num_win)
 		if accuracy > 0.1:
 			match_index = Fast
 			max_accuracy = accuracy
+			match_position = position
 	else:
 		for index in catalog:
 			sdata,slen = get_reference_data(index)
 
-			accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset)
+			accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset,num_win)
 			#filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				match_index  = index
 				max_accuracy = accuracy
+				match_position = position
 				break
 			#filter:find the max accuracy, and return
 			elif accuracy > max_accuracy:
 				match_index  = index
 				max_accuracy = accuracy
-
+				match_position = position
+	match_position = match_position * 2048 / 44100
 	#return_cha: if this variable is set True, we will return the charatics data.
 	if return_cha is True:
 		return match_index, tdata
 	#Else we will return match_audio max_accuracy, avgdb
-	return match_index, max_accuracy, avgdb, position
+	return match_index, max_accuracy, avgdb, match_position
 
 
 #######################################################
 #    search function                                                                                                    
 #######################################################
-def find_match(sdata,tdata,tlen,slen,window_size,offset):
+def find_match(sdata,tdata,tlen,slen,window_size,offset,num_win):
 	'''
 	Find the similar audio with target data.
 
@@ -161,11 +168,15 @@ def find_match(sdata,tdata,tlen,slen,window_size,offset):
 	sdata: source data(reference data)          Type:[array]
 	tdata: target data from target wav file.    Type:[array]
 	tlen: the length of tdata                   Type:[int]
+	slen: the length of sdata                   Type:[int]
+	window_size: search window size             Type:[int]
+	offset: window_size move offset on sdata    Type:[short]
+	num_win: how many windows in tdata          Type:[int]
 
 	Returns
     ----------
-    confidence: 0~100%                          Type:[float]
-
+    r.accuracy: 0~100%                          Type:[float]
+    r.position: index of sdata                  Type:[int]
 
 	-----------------------------------------
 	|-----win1------|-----win2-----|---------
@@ -177,8 +188,9 @@ def find_match(sdata,tdata,tlen,slen,window_size,offset):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-	r = ham.Compare(tdata,sdata,tlen,slen,window_size,offset)
+	r = ham.Compare(tdata,sdata,tlen,slen,window_size,offset,num_win)
 	return r.accuracy, r.position
+	
 	#Old version Python
 	#***********************************************************#
 	#***********************************************************#

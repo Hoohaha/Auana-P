@@ -16,11 +16,17 @@ channels = 2
 samplerate = 44100
 format = paInt16
 
+import matplotlib.pyplot as plt  
+plt.title("Diagram")
+plt.xlabel('Record Time (s)')
+plt.ylabel('Search Time (s)')
+
+
 pa = PyAudio()
 
-Time = 5
-NUM = int((samplerate*Time)/float(chunk))
-
+Time = [2,3,4,5,6,7,8,9,10,15,20,30,40]
+#NUM = int((samplerate*Time)/float(chunk))
+b=[]
 save_buffer = []
 #open audio stream    
 stream = pa.open(
@@ -30,8 +36,9 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-while ("" == raw_input("Continue ?")):
-    N = NUM
+#while ("" == raw_input("Continue ?")):
+for i in Time:
+    N = int((samplerate*i)/float(chunk))
     print "  Listening..."
     # wave_data = []
     while N:
@@ -53,8 +60,14 @@ while ("" == raw_input("Continue ?")):
     print "-------------------------------------"
     print "                    Time Cost: %.3f"%end
     print " \n"
+    b.append(end)
     save_buffer = []
 
+# for a in xrange(2):
+#     print Time[a],b[a],Time[a+1],b[a+1]
+#     plt.plot([Time[a],b[a]],[Time[a+1],b[a+1]])
+plt.plot(Time,b)
+plt.show()  
 #stop stream
 stream.stop_stream()
 stream.close()

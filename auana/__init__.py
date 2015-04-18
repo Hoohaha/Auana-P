@@ -96,7 +96,7 @@ class Auana(object):
 			location = location_L
 		else:
 			location = location_R
-		location = location*2048/44100
+
 		if (index_L != None) and (index_L == index_R):
 			return self.catalog[index_L], accuracy ,average_db, location
 		else:
