@@ -60,7 +60,7 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 
 	// printf(">>>>>>>>>>>>>>>>>%d  %d  %d %d\n",wsize,slen,dw_limit,up_limit);//For Debug
 
-	for(i=0; i<(tlen/wsize); i++)//target file
+	for(i=0; i<num_win; i++)//target file
 	{
 		dismin   = Threshold;
 		min_seq0 = min_seq;
@@ -71,7 +71,7 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 			dis = 0;
 			for(n=0;n<wsize;n++)
 			{
-				x = tData[wsize*i + n] ^ sData[wsize+index+n];
+				x = tData[wsize*i + n] ^ sData[index+n];
 				/*hamming weight*/
 				x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits  
     			x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits   
