@@ -69,11 +69,17 @@ For example:<br>
 ```
 ##Demo User's Guide
 -----
-1> Auana_Demo<br>
-This is a Demo for showing how to recognize the data from MIC. You can double click the "Auana_Demo.py" to run.<br>
+1> Prework_Demo<br>
+Prework_Demo can memory the new files.
+
+2> Mic_Recognition_Demo<br>
+This is a Demo for showing how to recognize the data from MIC. You can double click the "Mic_Recognition_Demo" to run.<br>
 And then you can play a song and press "Enter" to make the demo to processing.
 
-2> Broken_Frame_Demo<br>
+3> File_Search_Demo<br>
+Drag the sample ".wav" file into "File_Search_Demo.py".
+
+4> Broken_Frame_Demo<br>
 Drag the sample into "BrokenFrameDemo.py". 
 
 ##Simple Theory
@@ -87,7 +93,9 @@ Drag the sample into "BrokenFrameDemo.py".
 
 ##Performance
 -----
+There are 180 files in the "auana/data" folder. Follow figure shows the relationships between record-time and search time.
 
+![7](doc/figure_1.png)
 
 
 ##Version modification
