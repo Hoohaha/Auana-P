@@ -1,15 +1,17 @@
 #Author: Halye Guo  Date:2014/12
+
 import numpy as np
-# import scipy.signal as signal
 import os
-current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 from ctypes import *
 
+#Match info struct Definition
 class MATCH_INFO(Structure):
     _fields_ = [("accuracy", c_float),
                 ("position", c_int)]
 
-ham = cdll.LoadLibrary(current_directory+"/Compare.so")
+#Load the "compare" function from compare.so
+__DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+ham = cdll.LoadLibrary(__DIR+"/Compare.so")
 ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 						   c_int,
@@ -20,13 +22,16 @@ ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C
 						   ]
 ham.Compare.restype = MATCH_INFO
 
+###########################################################################
 #How many data in fft process, this value must be 2^n. 
-DEFAULT_FFT_SIZE = 4096
+DEF_FFT_SIZE = 4096
+#Overlap frmate depth 
+DEF_OVERLAP = 2
 #Sub-fingerprint bit depth
 FIN_BIT = 32
 #Mel frequency
-mel = (2596*np.log10(1+4000/700.0))/(FIN_BIT+1.0)
-#The upper and lower bounds of sub-band. 
+MEL = (2596*np.log10(1+4000/700.0))/(FIN_BIT+1.0)
+#The upper and lower bounds of sub-band. when framerate is 44100
 BandTable = {1: [0  ,   8],  2: [4  ,  12],  3: [8  ,  17],  4: [12 ,  22], 
 			 5: [17 ,  27],  6: [22 ,  32],  7: [27 ,  38],  8: [32 ,  44],
 			 9: [38 ,  51], 10: [44 ,  58], 11: [51 ,  65], 12: [58 ,  73], 
@@ -100,11 +105,11 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	if tlen < 90:
 		window_size, offset = 4,   1
 	elif 90 <= tlen <= 900:
-		window_size, offset = 16,  2
+		window_size, offset = 12,  2
 	else:
 		window_size, offset = 100, 3
 
-	num_win = tlen/window_size;
+	num_win = tlen/window_size
 
 	def get_reference_data(index):
 		'''
@@ -119,7 +124,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		sdata: source data.                				 Type:[array]
 		slen: source data length                         Type:[int]
 		'''
-		sdata = np.fromfile(current_directory+"/data/"+str(index)+".bin",dtype=np.uint32)
+		sdata = np.fromfile(__DIR+"/data/"+str(index)+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
 		slen = sdata.shape[-1]
 		return sdata[channel],slen
@@ -127,7 +132,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	#search
 	if Fast is not None:
 		sdata,slen = get_reference_data(Fast)
-		accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset,num_win)
+		accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
 		if accuracy > 0.1:
 			match_index = Fast
 			max_accuracy = accuracy
@@ -136,19 +141,19 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		for index in catalog:
 			sdata,slen = get_reference_data(index)
 
-			accuracy,position = find_match(sdata,tdata,tlen,slen,window_size,offset,num_win)
-			#filter: if accuracy more than 50%, that is to say the it is same with the reference
+			accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
+			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				match_index  = index
 				max_accuracy = accuracy
 				match_position = position
 				break
-			#filter:find the max accuracy, and return
+			#Filter:find the max accuracy, and return
 			elif accuracy > max_accuracy:
 				match_index  = index
 				max_accuracy = accuracy
 				match_position = position
-	match_position = match_position * 2048 / 44100
+	match_position = match_position * (DEF_FFT_SIZE / DEF_OVERLAP) / framerate
 	#return_cha: if this variable is set True, we will return the charatics data.
 	if return_cha is True:
 		return match_index, tdata
@@ -159,7 +164,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 #######################################################
 #    search function                                                                                                    
 #######################################################
-def find_match(sdata,tdata,tlen,slen,window_size,offset,num_win):
+def compare(sdata,tdata,tlen,slen,window_size,offset,num_win):
 	'''
 	Find the similar audio with target data.
 
@@ -245,45 +250,54 @@ def get_fingerprint(wdata,framerate,db=True):
 	This function generate a frame, and calculate it`s fingerprint.
 	For 5sec files, the overlap is 3/4, others is 1/2.
 	'''
-	global DEFAULT_OVERLAP
+	#data length
 	data_len = wdata.shape[-1]
-	#Overlap frmate depth
-	DEFAULT_OVERLAP = 2
 
-	scale = (framerate/2.0)/(DEFAULT_FFT_SIZE/2.0+1)
+	#hanning window
+	hanning = _hann(DEF_FFT_SIZE, sym=0)
+
+	#divide the frequency sub-band
+	if framerate != 44100:
+		#frequency scale
+		scale = (framerate>>2)/(DEF_FFT_SIZE>>2+1.0)
+		for n in xrange(1,FIN_BIT+1):
+			b0 = int(round(700*(10**((n-1)*MELMEL/2596.0)-1)/scale,0))
+			b1 = int(round(700*(10**((n+1)*MEL/2596.0)-1)/scale,0))
+			BandTable.update({n:[b0,b1]})
 
 	fin= []
+
+	#volume compute
 	sumdb = 0
 	num = 0
-	sta = 0
-	end = DEFAULT_FFT_SIZE
 
-	hanning = _hann(DEFAULT_FFT_SIZE, sym=0)
+	#index of "wdata"
+	sta = 0
+	end = DEF_FFT_SIZE
 
 	while end<data_len:
-		#generate a frame and get it`s fingerprint
-		#hanning window to smooth the edge
+		#1)generate a frame and get it`s fingerprint (sta:end)
+		#2)hanning window to smooth the edge
 		xs = np.multiply(wdata[sta:end], hanning)
+		
 		#fft transfer
 		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:373]))
-		
-		sta=sta+DEFAULT_FFT_SIZE/DEFAULT_OVERLAP
-		end=sta+DEFAULT_FFT_SIZE
-		
-		subfin = 0L
 
-		for n in  xrange(1,FIN_BIT+1):
+		#update indexs
+		sta=sta + DEF_FFT_SIZE/DEF_OVERLAP
+		end=sta + DEF_FFT_SIZE
+		
+		#single fingerprint init
+		sinfin = 0L
+
+		for n in xrange(1,FIN_BIT+1):
 			p1 = 0
 			p2 = 0
-			if len(BandTable)== 32:
-				#BandTable look-up
-				b0 = BandTable[n][0]
-				b1 = BandTable[n][1]
-			else:
-				#use a BandTable to improve the speed of calculate
-				b0 = int(round(700*(10**((n-1)*mel/2596.0)-1)/scale,0))
-				b1 = int(round(700*(10**((n+1)*mel/2596.0)-1)/scale,0))
-				BandTable.update({n:[b0,b1]})
+
+			#BandTable look-up
+			#use a BandTable to improve the speed of calculate
+			b0 = BandTable[n][0]
+			b1 = BandTable[n][1]
 
 			for b in xrange(b0,b1+1):
 				#calculate the Audio center of mass 
@@ -291,13 +305,13 @@ def get_fingerprint(wdata,framerate,db=True):
 				p1 += fp*b
 				p2 += fp
 				num += 1
+
 			#calculate the average volume of one fingerprint
 			sumdb += p2
-			
+
 			#quantization
-			if p1/p2-(b0+b1)/2 >= 0:
-				subfin = subfin | (1<<(n-1))
-		fin.append(subfin)
+			if p1/p2-(b0+b1)/2 >= 0: sinfin = sinfin | (1<<(n-1))
+		fin.append(sinfin)
 
 	fin = np.array(fin,dtype = np.uint32)
 	#fin:the file`s fingerprint
@@ -306,7 +320,6 @@ def get_fingerprint(wdata,framerate,db=True):
  		return fin,sumdb/num
  	else:
  		return fin
-# def fft_transfer():
 
 
 def hamming_weight(x):
