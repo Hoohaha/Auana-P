@@ -101,14 +101,14 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	#according the data length, 
 	#give different window size and offset to make the search faster.
 	if tlen < 90:
-		window_size, offset = 4,   1
+		window_size, offset = 3,   1
 	elif 90 <= tlen <= 900:
 		window_size, offset = 16,  1
 	else:
 		window_size, offset = 100, 3
 
 	num_win = tlen/window_size
-	print window_size,offset
+
 	def get_reference_data(index):
 		'''
 		This function load data acorrding the index.
