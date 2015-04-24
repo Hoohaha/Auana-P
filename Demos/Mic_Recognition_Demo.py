@@ -18,7 +18,7 @@ format = paInt16
 
 pa = PyAudio()
 
-Time = 5
+Time = 1
 NUM = int((samplerate*Time)/float(chunk))
 
 save_buffer = []
