@@ -53,9 +53,7 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 	uint32 x;
 
 	int Threshold, dw_limit, up_limit;
-	Threshold = (int)(wsize * 10);
-	dw_limit = wsize-1;
-	up_limit = wsize+2;
+	Threshold = 5;
 	max_index = slen - wsize;
 
 	// printf(">>>>>>>>>>>>>>>>>%d  %d  %d %d\n",wsize,slen,dw_limit,up_limit);//For Debug
@@ -73,10 +71,6 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 			{
 				x = tData[wsize*i + n] ^ sData[index+n];
 				/*hamming weight*/
-				x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits  
-    			x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits   
-    			x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits   
-    			x = (x * h01)>>24;              //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24)
     			dis += x;
 				if (dis > dismin) break;
 			}
@@ -91,34 +85,33 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 
 		temp = min_seq-min_seq0;
 		
-		if (dismin<Threshold && temp>=dw_limit && temp<=up_limit)
+		if (dismin<Threshold)
 		{
-			// printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
+			printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
 			confidence ++;
 			next_begain = min_seq;
+			_offset = wsize;
 		}
-		if (confidence == 6)
-			_offset = offset;
+		else
+		{
+			_offset = 1;
+		}
+		// if (confidence == 6)
+		// 	_offset = offset;
 
-		if (i>20 && confidence < 3)
-			return m;//stop find
+		// if (i>20 && confidence < 3)
+		// 	return m;//stop find
 	}
-
-	if(confidence<1)
+	if (confidence <2)
+		return m;
+	m.accuarcy = ((float)(confidence+1))/num_win;
+	if (m.accuarcy < 0.1)
 	{
 		m.accuarcy = 0;
-		return m;
 	}
-	else
-	{
-		m.accuarcy = ((float)(confidence+1))/num_win;
-		if (m.accuarcy < 0.1)
-		{
-			m.accuarcy = 0;
-		}
-		m.position = next_begain+1;
-		return m;
-	}
+	m.position = next_begain+1;
+	return m;
+
 }
 
 //For test
