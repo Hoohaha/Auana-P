@@ -17,8 +17,9 @@ samplerate = 44100
 format = paInt16
 
 pa = PyAudio()
+aua = Auana()
 
-Time = 1
+Time = 5
 NUM = int((samplerate*Time)/float(chunk))
 
 save_buffer = []
@@ -43,7 +44,7 @@ while ("" == raw_input("Continue ?")):
     wave_data = wave_data.T
 
     start = time.time()
-    name, confidence, db, position= Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position= aua.stereo(wave_data[0],wave_data[1],samplerate)
     end = time.time() - start
 
     if name is not None:

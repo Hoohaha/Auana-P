@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(_work_dir))
 from auana import Preprocess
 
 
-p = Preprocess()
+p = Preprocess("E:/16data")
 
 print "  Pre Work Demo"
 print "This demo will extracct the informations from reference files and save them. \n For Recognitions, this is necessary."
@@ -15,7 +15,7 @@ print "         2> The sample rate of mucics or songs must be 44100, format must
 
 sample_path = raw_input("Please input a folder path:")
 if sample_path == "":
-	sample_path = "E:\\FFOutput"
+	sample_path = "E:\\16MS"
 
 for parent, dirnames, filenames in os.walk(sample_path):
 	for filename in filenames:

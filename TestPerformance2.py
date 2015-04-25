@@ -24,7 +24,7 @@ plt.ylabel('Search Time (s)')
 
 pa = PyAudio()
 
-Time = [2,3,4,5,6,7,8,9,10,15,20,25,30,35,40]
+Time = [1,2,3,4,5,6,7,8,9,10,15,20,25,40]
 #NUM = int((samplerate*Time)/float(chunk))
 b=[]
 save_buffer = []
