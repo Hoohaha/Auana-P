@@ -1,6 +1,6 @@
 import sys, os
 __dir__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-sys.path.append(os.path.dirname(__dir__))
+sys.path.append(_work_dir)
 from auana import Auana,Fana
 
 print ("Title: File Search Demo")

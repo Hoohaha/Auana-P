@@ -5,7 +5,7 @@ import numpy as np
 
 _work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
-sys.path.append(os.path.dirname(_work_dir))
+sys.path.append(_work_dir)
 
 from auana import Auana
 
