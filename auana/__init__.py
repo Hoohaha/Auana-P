@@ -145,14 +145,14 @@ class Fana:
 		self.data.shape = -1,2
 		self.data = self.data.T #Transpose
 
-	def Recognize(self,STEREO=True,CH=0):
+	def recognize(self,STEREO=True,CH=0):
 		if STEREO is True:
 			return self.auana.stereo(self.data[0],self.data[1],self.framerate)
 		else:
 			return self.auana.mono(self.data[CH], CH, self.framerate)
 			
 
-	def Detect_Broken_Frame(self):
+	def detect_Broken_Frame(self):
 		chann0 = detect_broken_frame(self.data[0], self.framerate)
 		chann1 = detect_broken_frame(self.data[1], self.framerate)
 		if chann0 == 0 and chann1 == 0:

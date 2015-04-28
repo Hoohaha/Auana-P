@@ -3,13 +3,12 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
-sys.path.append(_work_dir)
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(__PATH__)
 
 from auana import Auana
 
-print " Mic Recognition Demo\n"
+print "Title: Mic Recognition Demo\n"
 
 chunk = 1024
 channels = 2
@@ -31,7 +30,7 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-while ("" == raw_input("Continue ?")):
+while ("" == raw_input("Press \'Enter\' to start..")):
     N = NUM
     print "  Listening..."
     # wave_data = []

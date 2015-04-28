@@ -1,12 +1,12 @@
 import time, os, sys
-_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-sys.path.append(_work_dir)
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(__PATH__)
 from auana import Preprocess
 
 
 p = Preprocess()
 
-print "  PreWork Demo"
+print "Title: PreWork Demo"
 print "This demo will extracct the informations from reference files and save them. \n For Recognitions, this is necessary."
 print "NOTE: 1> This demo will find \".wav\" in specify folder path. "
 print "      2> The sample rate of songs must be 44100, format must be \".wav\".\n"
@@ -21,6 +21,7 @@ if sample_path == "":
 for parent, dirnames, filenames in os.walk(sample_path):
 	for filename in filenames:
 		if os.path.splitext(filename)[1] == '.wav':
+
 			filepath = os.path.join(parent, filename).replace('\\','/')
 			
 			start = time.time()
