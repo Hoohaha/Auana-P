@@ -3,20 +3,20 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
-sys.path.append(os.path.dirname(_work_dir))
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(__PATH__))
 
 from auana import Auana
 
-print " Mic Recognition Demo\n"
+print "Title: Mic Recognition Demo\n"
 
 chunk = 1024
 channels = 2
-samplerate = 44100
+samplerate = 8000
 format = paInt16
 
 pa = PyAudio()
+aua = Auana(u"E:\8ksample_music\data")
 
 Time = 5
 NUM = int((samplerate*Time)/float(chunk))
@@ -30,7 +30,7 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-while ("" == raw_input("Continue ?")):
+while ("" == raw_input("Press \'Enter\' to start..")):
     N = NUM
     print "  Listening..."
     # wave_data = []
@@ -43,7 +43,7 @@ while ("" == raw_input("Continue ?")):
     wave_data = wave_data.T
 
     start = time.time()
-    name, confidence, db, position= Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position= aua.stereo(wave_data[0],wave_data[1],samplerate)
     end = time.time() - start
 
     if name is not None:

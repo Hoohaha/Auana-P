@@ -3,9 +3,8 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
-sys.path.append(os.path.dirname(_work_dir))
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(__PATH__))
 
 from auana import Auana
 
@@ -24,7 +23,7 @@ plt.ylabel('Search Time (s)')
 
 pa = PyAudio()
 
-Time = [2,3,4,5,6,7,8,9,10,15,20,25,30,35,40]
+Time = [1,2,3,4,5,6,7,8,9,10,15,20,25,40]
 #NUM = int((samplerate*Time)/float(chunk))
 b=[]
 save_buffer = []

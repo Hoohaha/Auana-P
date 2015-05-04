@@ -1,7 +1,7 @@
-from recognize import recognize,get_fingerprint
-from broframe import detect_broken_frame
-import wave, time, os
+import wave, os
 import cPickle as pickle
+from auana.recognize import recognize,get_fingerprint
+from auana.broframe import detect_broken_frame
 try:
 	import numpy as np
 except ImportError:
@@ -27,7 +27,7 @@ Fana(Auana From File)
    	stereo_start 	-- stereo recognize.
 
 
-Preprocess(Pre work before Analyze)
+Preprocess(Prework before Analyze)
 =========
 	hear            -- Hear a song and save the info.
 	clean_up		-- Delete all data
@@ -35,25 +35,34 @@ Preprocess(Pre work before Analyze)
 	itmes			-- Show the items which was saved in it's internal.
 """
 
-_work_dir = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
 class Auana(object):
+	def __init__(self, DataPath=""):
+		if DataPath == "":
+			self.dpath = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data"
+		else:
+			self.dpath = DataPath
 
-	def __init__(self):
+		self.pkl = self.dpath+'/AudioFingerCatalog.pkl'
+
+		if not os.path.exists(self.dpath):
+			print("Error: Invalid Path: %s")%(self.dpath)
+			os._exit(1)
+
+		elif not os.path.exists(self.pkl):
+			print("Error: \'AudioFingerCatalog.pkl\' is not exists,"
+				"Please use Preprocess to save data firstly!")
+			os._exit(1)
+		
 		try:
-			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
+			cfile = open(self.pkl, 'rb')
 			self.catalog = pickle.load(cfile)
+			self.MaxID = len(self.catalog)
 			cfile.close()
 		except EOFError:
-			print("Error: No data saved in pkl file." 
-			"Please fisrtly save the fingerprint of the reference audio.")
+			print("Error: There is no data was saved in \'AudioFingerCatalog.pkl\'.")
 			cfile.close()
-			self.__del__()
 			os._exit(1)
 			
-
-	def __del__(self):
-		pass
 
 	def broken_frame(self, wdata, framerate):
 		return detect_broken_frame(wdata, framerate)
@@ -64,7 +73,7 @@ class Auana(object):
 
 		'''
 		#audio recognition
-		match_index, accuracy, avgdb, location = recognize(self.catalog,wdata,framerate,channel)
+		match_index, accuracy, avgdb, location = recognize(self.MaxID,wdata,framerate,channel,self.dpath)
 
 		return self.catalog[match_index],accuracy,avgdb,location
 
@@ -72,22 +81,24 @@ class Auana(object):
 		'''
 		stereo recognition
 
-		It used the variable "Fast" to improve the speed of recognition. If left channel we matched 
-		an audio(example "source1.wav") in firstly, then search in next channel it will compare the 
-		matched audio("source1.wav"),rather than search all reference file again.
+		We used the variable "Fast" to improve the speed of recognition.
+		If left channel it matched an audio(example "source1.wav") in 
+		firstly, then search in next channel it will compare the matched 
+		audio("source1.wav"), rather than search all reference file again.
 
-		Especially, if the accuracy is high enough, we will don't need to search in another channel. 
+		Especially, if the accuracy is high enough, we will does't need to
+		search in another channel. 
 		'''
 		chann0 = 0
 		chann1 = 1
 
 		#1> Analyze the chann0 first. 
-		index_L, accuracy_L, avgdb_L, location_L= recognize(self.catalog,wdata0,framerate,chann0,Fast=None)
+		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.MaxID,wdata0,framerate,chann0,self.dpath,Fast=None)
 		#if accuracy is high enough, directly return
 		if accuracy_L>0.7:
-			return self.catalog[index_L], accuracy_L, avgdb_L, location_L
+			return self.catalog[MatchID_L], accuracy_L, avgdb_L, location_L
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
-		index_R, accuracy_R, avgdb_R, location_R = recognize(self.catalog,wdata1,framerate,chann1,Fast=index_L)
+		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.MaxID,wdata1,framerate,chann1,self.dpath,Fast=MatchID_L)
 
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)
@@ -97,75 +108,82 @@ class Auana(object):
 		else:
 			location = location_R
 
-		if (index_L != None) and (index_L == index_R):
-			return self.catalog[index_L], accuracy ,average_db, location
+		if (MatchID_L != None) and (MatchID_L == MatchID_R):
+			return self.catalog[MatchID_L], accuracy ,average_db, location
 		else:
 			return None,0, average_db, 0
+	
 
-
-class Fana(Auana):
+class Fana:
 	'''
-	Fana: File Analysis
-	Now only support wav format.
+	Fileana: File Analysis. Now only support wav format.
 	'''
-	def __init__(self,filepath):	
-		Auana.__init__(self)
-		#open wav file
-		wf = wave.open(filepath, 'rb')
-		params = wf.getparams()
-		nchannels, sampwidth, framerate, nframes = params[:4]
-		str_data = wf.readframes(nframes)
-		wf.close()
+	def __init__(self,auana,f):
+		self.auana = auana
+		self.data = []
+		self.framerate = 0
 
-		wave_data = np.fromstring(str_data, dtype = np.short)
-		wave_data.shape = -1,2
-		wave_data = wave_data.T #transpose multiprocessing.Process
-
-		self.name = os.path.basename(filepath)
-		self.framerate =framerate
-		self.wdata0=wave_data[0]
-		self.wdata1=wave_data[1]
-
-	def stereo_start(self):
-		return self.stereo(self.wdata0,self.wdata1,self.framerate)
-
-	def mono_start(self,channel):
-		data = {0:self.wdata0,1:self.wdata1}
-		return self.mono(data[channel],channel,self.framerate)
-
-	def broken_frame(self):
-		chann0 = detect_broken_frame(self.wdata0, self.framerate)
-		chann1 = detect_broken_frame(self.wdata1, self.framerate)
-		if chann0 == 0 and chann1 == 0:
-			print "No Broken-Frame Found!"
+		if os.path.splitext(os.path.basename(f))[1] == '.wav':
+			self.__wave_get_data(f)
 		else:
-			print "Numbers in Left  channel : %d"%len(chann0)
-			print "Numbers in Right channel : %d"%len(chann1)
-			if chann0 != 0:
-				for item in chann0:
-					print "+----------"
-					print "| channel:%d, detect a broken frame, in time:"%0, item
-					print "+----------"
-			if chann1 != 0:
-				for item in chann1:
-					print "+----------"
-					print "| channel:%d, detect a broken frame, in time:"%1, item
-					print "+----------"
+			print ("Not support yet!")
 
 
+	def __wave_get_data(self,f):
+		#open wav file
+		wf = wave.open(f, 'rb')
+		nchannels, sampwidth, self.framerate, nframes = wf.getparams()[:4]
 
+		if nchannels != 2:
+			print ("Error: channels is not stereo!")
+			wf.close()
+			os._exit(1)
+
+		str_data = wf.readframes(nframes)
+		
+		wf.close()
+		self.data = np.fromstring(str_data, dtype = np.short)
+		self.data.shape = -1,2
+		self.data = self.data.T #Transpose
+
+	def recognize(self,STEREO=True,CH=0):
+		if STEREO is True:
+			return self.auana.stereo(self.data[0],self.data[1],self.framerate)
+		else:
+			return self.auana.mono(self.data[CH], CH, self.framerate)
+			
+
+	def detect_Broken_Frame(self):
+		chann0 = detect_broken_frame(self.data[0], self.framerate)
+		chann1 = detect_broken_frame(self.data[1], self.framerate)
+		if chann0 == 0 and chann1 == 0:
+			return 0
+		else:
+			return {"left":chann0, "right": chann1}
 
 
 ##################################################################################################
 
-
-
 class Preprocess:
-	def __init__(self):
+	def __init__(self,DataPath=""):
+		if DataPath == "":
+			self.dpath = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data"
+		else:
+			self.dpath = DataPath
+		
+		self.pkl = self.dpath+'/AudioFingerCatalog.pkl'
+
+		#Create a new pkl file
+		if not os.path.exists(self.dpath):
+			os.makedirs(self.dpath)
+
 		try:
-			cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'rb')
+			cfile = open(self.pkl, 'rb')
 			self.catalog = pickle.load(cfile)
 		except EOFError:
+			self.catalog = {}
+		except IOError:
+			cfile = open(self.pkl, 'w+')
 			self.catalog = {}
 		cfile.close()
 
@@ -183,7 +201,6 @@ class Preprocess:
 				print "  NOTICE: This File Has Been Saved Before!"
 				return
 
-
 		#Get data from wav file
 		wf = wave.open(filepath, 'rb')
 		nchannels, sampwidth, framerate, nframes = wf.getparams()[:4]
@@ -193,12 +210,13 @@ class Preprocess:
 		wave_data.shape = -1,2
 		wave_data = wave_data.T#transpose
 
+
 		cache = []
 		cache.append(get_fingerprint(wdata=wave_data[0],framerate=framerate,db=False))
 		cache.append(get_fingerprint(wdata=wave_data[1],framerate=framerate,db=False))#Compute charatics
 
 		#Creat .bin file
-		bin_path = "%s%s%s%s"%(_work_dir,"/data/",str(index),".bin")
+		bin_path = self.dpath + "/" + str(index) + ".bin"
 		dfile = open(bin_path, 'w+')
 		np.array(cache,dtype=np.uint32).tofile(bin_path)
 		dfile.close()
@@ -206,19 +224,19 @@ class Preprocess:
 		
 		#Update catalog
 		self.catalog.update({index:filename})
-		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
+		cfile = open(self.pkl, 'w+')	
 		pickle.dump(self.catalog, cfile)
 		cfile.close()
-		print "HEAR<SAVE> DONE!"
+		print "Hear<Save> Done!"
 
 	def clean_up(self):
-		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')
+		cfile = open(self.pkl, 'w+')
 		cfile.close()
 		print "Already Clean Done!"
 
 	def forget(self,filename):
 		self.catalog.pop(filename)
-		cfile = open(_work_dir+'/data/AudioFingerCatalog.pkl', 'w+')	
+		cfile = open(self.pkl, 'w+')	
 		pickle.dump(self.catalog, cfile)
 		cfile.close()
 		print "Already forgot << %s >>!"%filename
