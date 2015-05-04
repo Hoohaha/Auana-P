@@ -72,7 +72,7 @@ class Auana(object):
 
 		'''
 		#audio recognition
-		match_index, accuracy, avgdb, location = recognize(self.catalog,wdata,framerate,channel)
+		match_index, accuracy, avgdb, location = recognize(self.catalog,wdata,framerate,channel,self.dpath)
 
 		return self.catalog[match_index],accuracy,avgdb,location
 
@@ -92,12 +92,12 @@ class Auana(object):
 		chann1 = 1
 
 		#1> Analyze the chann0 first. 
-		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.catalog,wdata0,framerate,chann0,Fast=None)
+		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.catalog,wdata0,framerate,chann0,self.dpath,Fast=None)
 		#if accuracy is high enough, directly return
 		if accuracy_L>0.7:
 			return self.catalog[MatchID_L], accuracy_L, avgdb_L, location_L
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
-		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.catalog,wdata1,framerate,chann1,Fast=index_L)
+		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.catalog,wdata1,framerate,chann1,self.dpath,Fast=MatchID_L)
 
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)

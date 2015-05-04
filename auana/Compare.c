@@ -78,7 +78,6 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
     			x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits   
     			x = (x * h01)>>24;              //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24)
     			dis += x;
-				if (dis > dismin) break;
 			}
 
 			//get min distance and the index in source data
@@ -121,25 +120,26 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 	}
 }
 
+
 //For test
 // int main()
 // {	int i = 0,len=2;
 // 	long n = 0;
-// 	// float aaa=0;
-// 	// uint32 tdata[5]={1,2,3,4,0};
-// 	// uint32 sdata[5]={1,2,3,4,0};
-// 	// aaa = find_match(tdata,sdata,5,5,len);
-// 	// printf("confidence:%f\n",aaa);
-// 	// printf ("res:%d\n",n);
-// 	uint32 m=0;
-// 	n = 5;
-// 	while(n)
-// 	{
-// 	scanf("%d",&m);
-// 	printf("input value%d\n",m);
-// 	i = hamming_weight(m);
-// 	printf("res: %d\n",i);
-// 		n -= 1;
-// 	}
+// 	struct match_info a;
+// 	uint32 tdata[6]={395465836,843686630, 740887446, 631982742, 631855766,631982742};
+// 	uint32 sdata[6]={395465836,843686630, 740887446, 631982742, 631855766,631982742};;
+// 	a = Compare(tdata,sdata,6,6,2,1,3);
+// 	printf("confidence:%f\n",a.accuarcy);
+// 	printf ("res:%d\n",n);
+// 	// uint32 m=0;
+// 	// n = 5;
+// 	// while(n)
+// 	// {
+// 	// scanf("%d",&m);
+// 	// printf("input value%d\n",m);
+// 	// i = hamming_weight(m);
+// 	// printf("res: %d\n",i);
+// 	// 	n -= 1;
+// 	// }
 
 // }

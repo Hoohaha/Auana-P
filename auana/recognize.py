@@ -43,7 +43,7 @@ BandTable = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22],
 			 [195, 226], [210, 244], [226, 262], [244, 282], 
 			 [262, 302], [282, 324], [302, 347], [324, 372]]
 
-def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
+def recognize(catalog,wdata,framerate,channel,datapath,Fast=None,return_cha=False):
 	'''
 	This function is audio recognition.
 	
@@ -118,7 +118,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		This function load data acorrding the index.
 
 		Parameters
-	    ----------
+		----------
 		index: the index of the reference file.          Type:[int]
 
 		Returns
@@ -126,7 +126,7 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 		sdata: source data.                				 Type:[array]
 		slen: source data length                         Type:[int]
 		'''
-		sdata = np.fromfile(__DIR+"/data/"+str(index)+".bin",dtype=np.uint32)
+		sdata = np.fromfile(datapath + "/" +str(index)+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
 		slen = sdata.shape[-1]
 		return sdata[channel],slen
@@ -142,7 +142,6 @@ def recognize(catalog,wdata,framerate,channel,Fast=None,return_cha=False):
 	else:
 		for index in catalog:
 			sdata,slen = get_reference_data(index)
-
 			accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
 			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
@@ -288,8 +287,8 @@ def get_fingerprint(wdata,framerate,db=True):
 		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:Max_Band]))
 
 		#update index
-		s=s + DEF_FFT_SIZE/DEF_OVERLAP
-		e=s + DEF_FFT_SIZE
+		s = s + DEF_FFT_SIZE/DEF_OVERLAP
+		e = s + DEF_FFT_SIZE
 
 		subfin = 0L
 
@@ -316,6 +315,7 @@ def get_fingerprint(wdata,framerate,db=True):
 	fin = np.array(fin,dtype = np.uint32)
 	if db is True:
 		return fin,0
+
  	return fin
 
 
