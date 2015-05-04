@@ -31,12 +31,14 @@ So for the automation of audio validation, it may be a good idea. It is still in
 ##Quickly Start
 -----------------------------------
 1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
-The "Preprocess" is a class can be used to memory an audio charactics. The following example<br>
-shows how to use it.<br>
+The "Preprocess" is a class can be used to memory an audio charactics. The following example shows how to use it.<br>
 For example:<br>
 ```python
         from auana import Preprocess
-        p=Preprocess
+        
+        #you'd better to set a path to save data. 
+        #if data path is empty, it will use the default configuration: "../auana/data/"
+        p=Preprocess("data_path")#p=Preprocess()
         
         #memory the audio infomation,before you start to Analyze
         p.hear("sample.wav")
@@ -51,36 +53,44 @@ For example:<br>
 Fana: File recognition(only support .wav)<br>
 For example:<br>
 ```python
-        from auana import Fana
+        from auana import Auana,Fana
+        
+        #data_path: where is the data
+        aua = Auana("data_path")
         
         #mono recognition
-        print Fana("sample.wav").mono_start()
+        print Fana(aua,"sample.wav").mono_start()
         
         #stereo recognition
-        print Fana("sample.wav").stereo_start()
+        print Fana(aua,"sample.wav").stereo_start()
 ```
 3> Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
 It will tell you wheather the audi lost frames, and will return where lost it.<br>
 For example:<br>
 ```python
-        from auna import Fana
-        #broken frame detection
-        Fana("sample.wav").broken_frame()
+        Fana(aua,"sample.wav").broken_frame()
 ```
-##Demo User's Guide
+##Example User's Guide
 -----
-1> Prework_Demo<br>
-Prework_Demo can memory the new files.
+1> Prework<br>
+Prework Demo can memory the new files.
 
-2> Mic_Recognition_Demo<br>
-This is a Demo for showing how to recognize the data from MIC. You can double click the "Mic_Recognition_Demo" to run.<br>
+2> MIC Recognition<br>
+This is a Demo for showing how to recognize the data from MIC. You can double click the "Example_MICRecognition" to run.<br>
 And then you can play a song and press "Enter" to make the demo to processing.
 
-3> File_Search_Demo<br>
-Drag the sample ".wav" file into "File_Search_Demo.py".
+3> File Search<br>
+Drag the sample ".wav" file into "Example_FileSearchDemo.py".
 
-4> Broken_Frame_Demo<br>
-Drag the sample into "BrokenFrameDemo.py". 
+4> Broken Frame<br>
+Drag the sample into "Example_BrokenFrame.py". 
+
+##Performance
+-----
+There are 180 files in the "auana/data" folder. Follow figure shows the relationships between record-time and search time.
+
+![7](doc/figure_2.png)
+
 
 ##Simple Theory
 -----
@@ -91,13 +101,6 @@ Drag the sample into "BrokenFrameDemo.py".
 ![6](doc/Slide7.PNG)
 ![8](doc/Slide8.PNG)
 
-##Performance
------
-There are 180 files in the "auana/data" folder. Follow figure shows the relationships between record-time and search time.
-
-![7](doc/figure_1.png)
-
-
 ##Version modification
 --------------
 version 0.1.Auana Pacage. <br>
@@ -105,3 +108,4 @@ version 0.2.Auana: designed by C and python.<br>
 version 0.3.Auana: Optimzie parameter about recognition to make it more reliable.<br>
 version 0.4.Auana: New functions: return where the match songs is playing.<br>
 version 0.5.Auana: Optimize the get_fingerprint algoritms<br>
+version 0.6.Auana: New algorithm for extracting fingerprints<br>
