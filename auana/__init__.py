@@ -27,7 +27,7 @@ Fana(Auana From File)
    	stereo_start 	-- stereo recognize.
 
 
-Preprocess(Pre work before Analyze)
+Preprocess(Prework before Analyze)
 =========
 	hear            -- Hear a song and save the info.
 	clean_up		-- Delete all data
@@ -45,7 +45,7 @@ class Auana(object):
 		self.pkl = self.dpath+'/AudioFingerCatalog.pkl'
 
 		if not os.path.exists(self.dpath):
-			print("Error: Invalid path: %s")%(self.dpath)
+			print("Error: Invalid Path: %s")%(self.dpath)
 			os._exit(1)
 
 		elif not os.path.exists(self.pkl):
@@ -56,6 +56,7 @@ class Auana(object):
 		try:
 			cfile = open(self.pkl, 'rb')
 			self.catalog = pickle.load(cfile)
+			self.MaxID = len(self.catalog)
 			cfile.close()
 		except EOFError:
 			print("Error: There is no data was saved in \'AudioFingerCatalog.pkl\'.")
@@ -72,7 +73,7 @@ class Auana(object):
 
 		'''
 		#audio recognition
-		match_index, accuracy, avgdb, location = recognize(self.catalog,wdata,framerate,channel,self.dpath)
+		match_index, accuracy, avgdb, location = recognize(self.MaxID,wdata,framerate,channel,self.dpath)
 
 		return self.catalog[match_index],accuracy,avgdb,location
 
@@ -92,12 +93,12 @@ class Auana(object):
 		chann1 = 1
 
 		#1> Analyze the chann0 first. 
-		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.catalog,wdata0,framerate,chann0,self.dpath,Fast=None)
+		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.MaxID,wdata0,framerate,chann0,self.dpath,Fast=None)
 		#if accuracy is high enough, directly return
 		if accuracy_L>0.7:
 			return self.catalog[MatchID_L], accuracy_L, avgdb_L, location_L
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
-		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.catalog,wdata1,framerate,chann1,self.dpath,Fast=MatchID_L)
+		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.MaxID,wdata1,framerate,chann1,self.dpath,Fast=MatchID_L)
 
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)
@@ -226,7 +227,7 @@ class Preprocess:
 		cfile = open(self.pkl, 'w+')	
 		pickle.dump(self.catalog, cfile)
 		cfile.close()
-		print "HEAR<SAVE> DONE!"
+		print "Hear<Save> Done!"
 
 	def clean_up(self):
 		cfile = open(self.pkl, 'w+')

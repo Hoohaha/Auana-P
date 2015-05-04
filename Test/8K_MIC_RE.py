@@ -8,24 +8,19 @@ sys.path.append(os.path.dirname(__PATH__))
 
 from auana import Auana
 
-print " Mic Recognition Demo\n"
+print "Title: Mic Recognition Demo\n"
 
 chunk = 1024
 channels = 2
-samplerate = 44100
+samplerate = 8000
 format = paInt16
 
-import matplotlib.pyplot as plt  
-plt.title("Diagram")
-plt.xlabel('Record Time (s)')
-plt.ylabel('Search Time (s)')
-
-
 pa = PyAudio()
+aua = Auana(u"E:\8ksample_music\data")
 
-Time = [1,2,3,4,5,6,7,8,9,10,15,20,25,40]
-#NUM = int((samplerate*Time)/float(chunk))
-b=[]
+Time = 5
+NUM = int((samplerate*Time)/float(chunk))
+
 save_buffer = []
 #open audio stream    
 stream = pa.open(
@@ -35,9 +30,8 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-#while ("" == raw_input("Continue ?")):
-for i in Time:
-    N = int((samplerate*i)/float(chunk))
+while ("" == raw_input("Press \'Enter\' to start..")):
+    N = NUM
     print "  Listening..."
     # wave_data = []
     while N:
@@ -49,7 +43,7 @@ for i in Time:
     wave_data = wave_data.T
 
     start = time.time()
-    name, confidence, db, position= Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position= aua.stereo(wave_data[0],wave_data[1],samplerate)
     end = time.time() - start
 
     if name is not None:
@@ -59,14 +53,8 @@ for i in Time:
     print "-------------------------------------"
     print "                    Time Cost: %.3f"%end
     print " \n"
-    b.append(end)
     save_buffer = []
 
-# for a in xrange(2):
-#     print Time[a],b[a],Time[a+1],b[a+1]
-#     plt.plot([Time[a],b[a]],[Time[a+1],b[a+1]])
-plt.plot(Time,b)
-plt.show()  
 #stop stream
 stream.stop_stream()
 stream.close()

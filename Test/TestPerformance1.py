@@ -1,7 +1,7 @@
-from auana import Fana, Preprocess
 import os,time
-current_directory = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(__PATH__))
+from auana import Fana
 # search .wav file
 dir_audio0 = "E:/sample"
 

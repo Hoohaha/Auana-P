@@ -30,7 +30,7 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-while ("" == raw_input("Press \'Enter\' to start..")):
+while ("" == raw_input("Press \'Enter\' to start.")):
     N = NUM
     print "  Listening..."
     # wave_data = []

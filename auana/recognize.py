@@ -43,7 +43,7 @@ BandTable = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22],
 			 [195, 226], [210, 244], [226, 262], [244, 282], 
 			 [262, 302], [282, 324], [302, 347], [324, 372]]
 
-def recognize(catalog,wdata,framerate,channel,datapath,Fast=None,return_cha=False):
+def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	'''
 	This function is audio recognition.
 	
@@ -140,7 +140,7 @@ def recognize(catalog,wdata,framerate,channel,datapath,Fast=None,return_cha=Fals
 			max_accuracy = accuracy
 			match_position = position
 	else:
-		for index in catalog:
+		for index in xrange(MaxID):
 			sdata,slen = get_reference_data(index)
 			accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
 			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
@@ -154,11 +154,9 @@ def recognize(catalog,wdata,framerate,channel,datapath,Fast=None,return_cha=Fals
 				match_index  = index
 				max_accuracy = accuracy
 				match_position = position
+
+	#transfer to time scale
 	match_position = match_position * (DEF_FFT_SIZE / DEF_OVERLAP) / framerate
-	#return_cha: if this variable is set True, we will return the charatics data.
-	if return_cha is True:
-		return match_index, tdata
-	#Else we will return match_audio max_accuracy, avgdb
 	return match_index, max_accuracy, avgdb, match_position
 
 
@@ -260,6 +258,7 @@ def get_fingerprint(wdata,framerate,db=True):
 	if framerate != 44100:
 		#frequency scale
 		scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+
 		TEM = MEL/2596.0
 		#compute the sub-band
 		for n in xrange(1,FIN_BIT+1):
@@ -267,7 +266,7 @@ def get_fingerprint(wdata,framerate,db=True):
 			b1 = int(round(700*(10**((n+1)*TEM)-1)/scale,0))
 			BandTable[n-1]=[b0,b1]
 
-	Max_Band = BandTable[FIN_BIT-1][1]+1
+	Max_Band = BandTable[FIN_BIT-1][1]
 
 	#volume compute
 	sumdb = 0
@@ -301,7 +300,7 @@ def get_fingerprint(wdata,framerate,db=True):
 			max_fp = 0
 			max_b = 0
 
-			for b in xrange(b0,b1+1):
+			for b in xrange(b0,b1):
 				#Compute the max frequency value
 				if (xfp[b] > max_fp): 
 					max_fp = xfp[b]
