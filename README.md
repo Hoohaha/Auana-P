@@ -1,4 +1,4 @@
-Auana-P Version 0.5
+Auana-P Version 0.6
 
 
 #Auana-P:Auana algorithm Python Package<br>
@@ -30,26 +30,45 @@ So for the automation of audio validation, it may be a good idea. It is still in
 
 ##Quickly Start
 -----------------------------------
-1> Prework: The recognition need to get the reference information of audios before starting of your work.<br>
+1) Prework: The recognition need to get the reference information of audios before starting of your work.<br>
 The "Preprocess" is a class can be used to memory an audio charactics. The following example shows how to use it.<br>
-For example:<br>
+
+import module:
 ```python
         from auana import Preprocess
-        
-        #you'd better to set a path to save data. 
-        #if data path is empty, it will use the default configuration: "../auana/data/"
-        p=Preprocess("data_path")#p=Preprocess()
-        
-        #memory the audio infomation,before you start to Analyze
+```
+
+
+Configure the path where the data will be saved. 
+```pyhthon
+        p = Preprocess("data_path")
+```
+
+
+If not, it will use default configuration: "auana/data"
+```python
+        p = Preprocess()
+```
+
+
+Memory an audio, before you start to Analyze
+```python        
         p.hear("sample.wav")
-        
-        #show all itmes which saved in it's internal.
+```
+
+
+If you want to know how many items that was saved in "data_path"
+```python
         p.items()
-        
-        #clear all items. this functions should be used with caution.
+```
+
+
+Clear all.
+```python
+        #This functions should be used with caution.
         p.clean_up()
 ```   
-2> Recognition: There are two calss: Auana and Fana.<br>
+2) Recognition: There are two calss: Auana and Fana.<br>
 Fana: File recognition(only support .wav)<br>
 For example:<br>
 ```python
@@ -64,7 +83,7 @@ For example:<br>
         #stereo recognition
         print Fana(aua,"sample.wav").stereo_start()
 ```
-3> Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
+3) Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
 It will tell you wheather the audi lost frames, and will return where lost it.<br>
 For example:<br>
 ```python
@@ -72,17 +91,17 @@ For example:<br>
 ```
 ##Example User's Guide
 -----
-1> Prework<br>
+>1> Prework<br>
 Prework Demo can memory the new files.
 
-2> MIC Recognition<br>
+>2> MIC Recognition<br>
 This is a Demo for showing how to recognize the data from MIC. You can double click the "Example_MICRecognition" to run.<br>
 And then you can play a song and press "Enter" to make the demo to processing.
 
-3> File Search<br>
+>3> File Search<br>
 Drag the sample ".wav" file into "Example_FileSearchDemo.py".
 
-4> Broken Frame<br>
+>4> Broken Frame<br>
 Drag the sample into "Example_BrokenFrame.py". 
 
 ##Performance
