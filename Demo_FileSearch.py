@@ -1,5 +1,5 @@
+import sys, os
 from auana import Auana
-import os
 
 print ("Title: File Search Demo")
 print ("Date: 2015.4.25\n")

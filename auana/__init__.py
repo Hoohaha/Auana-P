@@ -71,6 +71,26 @@ def Create(framerate=22050,path = DEFAULT_DATA_PATH):
 
 
 
+
+def Detect_broken_frame(dl,dr,framerate):
+	if dl is not None:
+		chann0 = detect_broken_frame(dl, framerate)
+	if dr is not None:
+		chann1 = detect_broken_frame(dr, framerate)
+	
+	return {"left":chann0, "right": chann1}
+
+
+
+def Load_file(f):
+	if os.path.splitext(os.path.basename(f))[1] == '.wav':
+		return _wave_get_data(f)
+	else:
+		raise IOError("Not support yet!")
+
+
+
+
 class Auana:
 	'''
 	Auana is class to manage data storage.
@@ -104,14 +124,11 @@ class Auana:
 			raise Warning("The \'AudioFingerCatalog.pkl\' is empty, please crate a new.")
 
 	def openf(self, file):
-
 		self.filename = os.path.basename(file)
-		
-		data, framerate, nchannels = _load_file(file)
+		data, framerate, nchannels = Load_file(file)
 
 		if framerate != self.framerate:
 			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
-
 		return self.open(data)
 
 	def open(self, data):
@@ -256,15 +273,9 @@ class Stream:
 			return None,0, average_db, 0
 
 	def detect_broken_frame(self):
-		chann0 = detect_broken_frame(self.data[0], self.framerate)
-		chann1 = detect_broken_frame(self.data[1], self.framerate)
-		if chann0 == 0 and chann1 == 0:
-			return 0
-		else:
-			return {"left":chann0, "right": chann1}
+		return Detect_broken_frame(self.data[0],self.data[1],self.framerate)
 
 	def recognize(self,Mono=False,Fast=True,Ch=0):
-
 		if Mono is True:
 			return self._mono(Ch)
 		else:
@@ -283,12 +294,7 @@ def _load__catalog(path):
 	return catalog
 
 
-def _load_file(f):
-	"""Private method."""
-	if os.path.splitext(os.path.basename(f))[1] == '.wav':
-		return _wave_get_data(f)
-	else:
-		raise IOError("Not support yet!")
+
 
 
 def _wave_get_data(f):
