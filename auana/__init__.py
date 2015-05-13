@@ -57,7 +57,7 @@ def Create(framerate=22050,path = DEFAULT_DATA_PATH):
 		os.makedirs(path)
 		print ("Warnning: Specify path\n\'%s\'\n is not exists, it is created."%path)
 	try:
-		catalog = __load__catalog(catalog_path)
+		catalog = _load__catalog(catalog_path)
 
 		if framerate == catalog["FRAMERATE"]:
 			raise ValueError("\'%s\' already exists!"%catalog_path)
@@ -73,10 +73,23 @@ def Create(framerate=22050,path = DEFAULT_DATA_PATH):
 
 
 
-
-
 class Auana:
 	'''
+	Auana is class to manage data storage.
+		- init specified data storage
+		- open 'AudioFingerCatalog.pkl' and get catalog
+		- qurey a file if it was saved in 'path'.
+
+	Auana Storage Operations:
+		-- get_framerate: get the configuration of framerate in Auana storage.
+		-- clean_up: clean all items in Auana storage.
+		-- forget: delete specify item.
+		-- items: show all items.
+
+	Use this class to open a data stream.
+		-- open:  open a data list and create a obejct Stream.
+		-- openf: open a file and create a obejct Stream
+
 	'''
 	def __init__(self, path = DEFAULT_DATA_PATH, framerate = DEFAULT_FRAMERATE):
 		self.dpath        = path
@@ -86,7 +99,7 @@ class Auana:
 			raise Warning("There is no any \'stroage\' in \'%s\', please crate a new!"%path)
 
 		try:
-			self._catalog = __load__catalog(self.pkl)
+			self._catalog = _load__catalog(self.pkl)
 			self.framerate = self._catalog["FRAMERATE"]
 		except EOFError or KeyError:
 			cfile.close()
@@ -95,7 +108,7 @@ class Auana:
 	def openf(self, file):
 
 		self.filename = os.path.basename(file)
-		data,framerate, nchannels = __load_file(file)
+		data,framerate, nchannels = _load_file(file)
 
 		if framerate != self.framerate:
 			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
@@ -138,18 +151,27 @@ class Auana:
 
 
 class Stream:
+	'''
+	An audio data stream.
+
+	Operations for data stream:
+	- hear: extract fingerprints and save in Auana.
+	- recognize: extract fingerprints and compare with Auana.
+	- detect_broken_frame: detect broken frame
+
+	'''
 	def __init__(self, Au, wdata, framerate):
 		self._parent   = Au 
 		self.data      = wdata
 		self.framerate = framerate
-		self._catalog  = self._parent._catalog
+		self._catalog  = Au._catalog
 		self.dpath     = self._parent.dpath
 
-		###################################################
-		###################################################
+	###################################################
+	###################################################
 	def hear(self):
-		for i in self._parent._catalog:
-			if self._parent._catalog[i] == self._parent.filename:
+		for i in self._catalog:
+			if self._catalog[i] == self._parent.filename:
 				print "Notice: This File Has Been Saved Before!"
 				return
 
@@ -157,24 +179,25 @@ class Stream:
 		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate,db=False))
 		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate,db=False))#Compute charatics
 
-		index = len(self._parent._catalog)-1
+		index = len(self._catalog)-1
 
 		#Creat .bin file
-		bin_path = self._parent.dpath + "/" + str(index) + ".bin"
+		bin_path = self.dpath + "/" + str(index) + ".bin"
 		dfile = open(bin_path, 'w+')
 		np.array(cache,dtype=np.uint32).tofile(bin_path)
 		dfile.close()
 		del cache[:]
 		
 		#Update catalog
-		self._parent._catalog.update({index:self._parent.filename})
+		self._catalog.update({index:self._parent.filename})
 		cfile = open(self._parent.pkl, 'w+')	
-		pickle.dump(self._parent._catalog, cfile)
+		pickle.dump(self._catalog, cfile)
 		cfile.close()
 		print "Hear Done!"
 
 	def _mono(self,channel):
 		'''
+		Private method.
 		mono recognition
 
 		'''
@@ -186,6 +209,8 @@ class Stream:
 
 	def _stereo(self,FastSearch):
 		'''
+		Private method.
+
 		stereo recognition
 
 		We used the variable "Fast" to improve the speed of recognition.
@@ -246,14 +271,16 @@ class Stream:
 
 
 ##################################################################################################
-def __load__catalog(path):
+def _load__catalog(path):
+	"""Private method."""
 	cfile   = open(path, 'rb')
 	catalog = pickle.load(cfile)
 	cfile.close()
 	return catalog
 
 
-def __load_file(f):
+def _load_file(f):
+	"""Private method."""
 	if os.path.splitext(os.path.basename(f))[1] == '.wav':
 		return _wave_get_data(f)
 	else:
@@ -261,6 +288,7 @@ def __load_file(f):
 
 
 def _wave_get_data(f):
+	"""Private method."""
 	#open wav file
 	wf = wave.open(f, 'rb')
 

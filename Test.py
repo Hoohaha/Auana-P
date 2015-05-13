@@ -1,7 +1,7 @@
 import os, sys
 # __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 # sys.path.append(__PATH__)
-from auana import *
+from auana import Auana, Create
 
 try:
 	Create()
@@ -9,7 +9,6 @@ except ValueError:
 	pass
 
 au = Auana()
-
 
 stream = au.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
 
