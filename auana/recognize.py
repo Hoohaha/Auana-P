@@ -1,8 +1,8 @@
 #Author: Halye Guo  Date:2014/12
-import os
+import os,time
 import numpy as np
 from ctypes import *
-
+import cPickle as pickle
 #############################################################################
 #Match info struct Definition
 class MATCH_INFO(Structure):
@@ -34,14 +34,23 @@ MAX_FQ = 4000.0
 #Mel frequency
 MEL = (2596*np.log10(1+MAX_FQ/700.0))/(FIN_BIT+1.0)
 #The upper and lower bounds of sub-band. when framerate is 44100
-BandTable = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22], 
-			 [17 ,  27], [22 ,  32], [27 ,  38], [32 ,  44], 
-			 [38 ,  51], [44 ,  58], [51 ,  65], [58 ,  73], 
-			 [65 ,  81], [73 ,  89], [81 ,  99], [89 , 108], 
-			 [99 , 119], [108, 130], [119, 141], [130, 153], 
-			 [141, 166], [153, 180], [166, 195], [180, 210], 
-			 [195, 226], [210, 244], [226, 262], [244, 282], 
-			 [262, 302], [282, 324], [302, 347], [324, 372]]
+BandTable_1 = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22], 
+			   [17 ,  27], [22 ,  32], [27 ,  38], [32 ,  44], 
+			   [38 ,  51], [44 ,  58], [51 ,  65], [58 ,  73], 
+			   [65 ,  81], [73 ,  89], [81 ,  99], [89 , 108], 
+			   [99 , 119], [108, 130], [119, 141], [130, 153], 
+			   [141, 166], [153, 180], [166, 195], [180, 210], 
+			   [195, 226], [210, 244], [226, 262], [244, 282], 
+			   [262, 302], [282, 324], [302, 347], [324, 372]]
+
+BandTable_2 = [[0 ,  16], [8  ,  25], [16 ,  34], [25 ,  44], 
+			   [34 ,  54], [44 ,  65], [54 ,  76], [65 ,  89], 
+			   [76 , 102], [89 , 115], [102, 130], [115, 145],
+			   [130, 162], [145, 179], [162, 197], [179, 217], 
+			   [197, 237], [217, 259], [237, 282], [259, 307], 
+			   [282, 333], [307, 360], [333, 390], [360, 420], 
+			   [390, 453], [420, 488], [453, 524], [488, 563], 
+			   [524, 605], [563, 648], [605, 694], [648, 743]]
 
 def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	'''
@@ -112,6 +121,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 		window_size, offset = 100, 3
 
 	num_win = tlen/window_size
+	# candidate = find(tdata[:100])
 
 	def get_reference_data(index):
 		'''
@@ -255,7 +265,12 @@ def get_fingerprint(wdata,framerate,db=True):
 	hanning = _hann(DEF_FFT_SIZE, sym=0)
 
 	#divide the frequency sub-band
-	if framerate != 44100:
+	if framerate == 44100:
+		BandTable = BandTable_1
+	elif framerate == 22050:
+		BandTable = BandTable_2
+	else:
+		BandTable = []
 		#frequency scale
 		scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
 
@@ -264,7 +279,7 @@ def get_fingerprint(wdata,framerate,db=True):
 		for n in xrange(1,FIN_BIT+1):
 			b0 = int(round(700*(10**((n-1)*TEM)-1)/scale,0))
 			b1 = int(round(700*(10**((n+1)*TEM)-1)/scale,0))
-			BandTable[n-1]=[b0,b1]
+			BandTable.append((b0,b1))
 
 	Max_Band = BandTable[FIN_BIT-1][1]
 
@@ -318,8 +333,6 @@ def get_fingerprint(wdata,framerate,db=True):
  	return fin
 
 
-
-
 def _hann(M, sym=True):
 	'''
 	hanning window.
@@ -350,3 +363,31 @@ def hamming_weight(x):
 	x += x >> 16                   #put count of each 32 bits into their lowest 8 bits  
 	x += x >> 32                   #put count of each 64 bits into their lowest 8 bits  
 	return x & 0x7f
+
+def find(data):
+	s = time.time()
+	cfile = open(os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data" + "/IndexTable.pkl", 'r')	
+	itable = pickle.load(cfile)
+	cfile.close()
+	res = {}
+
+	for d in data:
+		d = (d & 0xFFFF0000) >> 16
+		indexs = itable[d]
+		if len(indexs) != 0:
+			for item in indexs:
+				if item not in res:
+					res[item] = 0
+				else:
+					res[item] += 1
+
+	length = len(data)/2
+
+	te = sorted(res.iteritems(),key=lambda d:d[1],reverse=True)
+
+	r = []
+	for t in te:
+		if t[1] > length:
+			r.append(t[0])
+	print "index-time %.3f"%(time.time()-s)
+	return r

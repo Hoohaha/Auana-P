@@ -1,7 +1,7 @@
 import numpy as np
 import wave, struct
 
-DEF_FFT_SIZE = 4096
+DEF_FFT_SIZE = 2048
 FIN_BIT = 32
 DEF_OVERLAP = 2
 mel = (2596*np.log10(1+4000/700.0))/(FIN_BIT+1.0)
@@ -86,6 +86,7 @@ def get_fingerprint(wdata,framerate,db=True):
 		fin.append(subfin)
 
 	fin = np.array(fin,dtype = np.uint32)
+
 	if db is True:
 		return fin,0
 
@@ -138,18 +139,30 @@ def trail(path):
 	return get_fingerprint(wave_data[0],44100,db=False)
 
 
-ae = trail("E:/sample/twrk21f120m/iar/Debug/112.wav")
-be = trail("E:/sample/twrk21f120m/iar/Debug/113.wav")
-sa = 0
-sb = 0
-for r in xrange(100):
-	a = ae[r]
-	b = be[r]
-	ah = hamming_weight(a)
-	bh = hamming_weight(b)
-	sa += ah
-	sb += bh
-	c = hamming_weight(a^b)
-	print "%8x %8x %d %d  %d"%(a,b,ah,bh,c)
+ae = trail(u"E:/app_data\ksdk_demo\sai_demo/audio_lib\source1.wav")
+be = trail("E:/sample/twrk21f120m/iar/Debug/112.wav")
+count  = 0
+max_count = 0
+max_r = 0
+for r in ae:
+	count  = 0
+	for a in ae:
+		dis = hamming_weight(r^a)
+		if r == a:
+			continue
+		if dis < 4:
+			count += 1
 
-print sa/100.0,sb/100.0
+	if max_count < count:
+		max_count = count
+		max_r = r
+
+
+print max_count, max_r#726226263 5
+
+print hamming_weight(865774421^726225239)
+
+for n in xrange(100):
+	print " %8x  %8x  %d"%(ae[n],be[n+7],hamming_weight(ae[n]^be[n+7]))
+	print "%30s"%bin(ae[n])[2:]
+	print "%30s"%bin(be[n+7])[2:]

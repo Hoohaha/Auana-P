@@ -8,12 +8,14 @@ sys.path.append(__PATH__)
 
 from auana import Auana
 
-print "Title: Mic Recognition Demo\n"
+print "Title: Mic Recognition Demo"
 
 chunk = 1024
 channels = 2
-samplerate = 44100
+samplerate = 22050
 format = paInt16
+
+print "Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16)
 
 pa = PyAudio()
 aua = Auana()

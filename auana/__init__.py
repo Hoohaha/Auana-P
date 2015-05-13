@@ -1,5 +1,6 @@
 import wave, os
 import cPickle as pickle
+import yaml
 from auana.recognize import recognize,get_fingerprint
 from auana.broframe import detect_broken_frame
 try:
@@ -7,6 +8,7 @@ try:
 except ImportError:
 	print("Please build and install the numpy Python ")
 
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 """
 =======================================
 Auana: An Audio Data Analyze Algorithm
@@ -35,49 +37,154 @@ Preprocess(Prework before Analyze)
 	itmes			-- Show the items which was saved in it's internal.
 """
 
-class Auana(object):
-	def __init__(self, DataPath=""):
-		if DataPath == "":
-			self.dpath = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data"
-		else:
-			self.dpath = DataPath
 
-		self.pkl = self.dpath+'/AudioFingerCatalog.pkl'
+#catalog file name
+CATALOG_FILE          = '/AudioFingerCatalog.pkl'
 
-		if not os.path.exists(self.dpath):
-			print("Error: Invalid Path: %s")%(self.dpath)
-			os._exit(1)
+#default catalog path: auana/data/AudioFingerCatalog.pkl
+DEFAULT_DATA_PATH  = __PATH__ + '/data'
 
-		elif not os.path.exists(self.pkl):
-			print("Error: \'AudioFingerCatalog.pkl\' is not exists,"
-				"Please use Preprocess to save data firstly!")
-			os._exit(1)
-		
+#default framerate
+DEFAULT_FRAMERATE     = 22050
+
+
+#create a new place to store data
+def Create(framerate=22050,path = DEFAULT_DATA_PATH):
+
+	catalog_path = path + CATALOG_FILE
+
+	if not os.path.exists(path):
+		os.makedirs(path)
+		print ("Warnning: Specify path\n\'%s\'\n is not exists, it is created."%path)
+	try:
+		catalog = __load__catalog(catalog_path)
+
+		if framerate == catalog["FRAMERATE"]:
+			raise ValueError("\'%s\' already exists!"%catalog_path)
+
+	except KeyError or EOFError or IOError:
+		catalog = {}
+		catalog["FRAMERATE"] = framerate
+		pklf = open(catalog_path, 'w+')
+		pickle.dump(catalog, pklf)
+		pklf.close()
+
+	print "Create Seccussfully!"
+
+
+
+
+
+class Auana:
+	'''
+	'''
+	def __init__(self, path = DEFAULT_DATA_PATH, framerate = DEFAULT_FRAMERATE):
+		self.dpath        = path
+		self.pkl = path + CATALOG_FILE
+
+		if not os.path.exists(self.pkl):
+			raise Warning("There is no any \'stroage\' in \'%s\', please crate a new!"%path)
+
 		try:
-			cfile = open(self.pkl, 'rb')
-			self.catalog = pickle.load(cfile)
-			self.MaxID = len(self.catalog)
+			self._catalog = __load__catalog(self.pkl)
+			self.framerate = self._catalog["FRAMERATE"]
+		except EOFError or KeyError:
 			cfile.close()
-		except EOFError:
-			print("Error: There is no data was saved in \'AudioFingerCatalog.pkl\'.")
-			cfile.close()
-			os._exit(1)
-			
+			raise Warning("The \'AudioFingerCatalog.pkl\' is empty, please crate a new.")
 
-	def broken_frame(self, wdata, framerate):
-		return detect_broken_frame(wdata, framerate)
+	def openf(self, file):
 
-	def mono(self,wdata,channel,framerate):
+		self.filename = os.path.basename(file)
+		data,framerate, nchannels = __load_file(file)
+
+		if framerate != self.framerate:
+			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
+
+		return self.open(data=data,stereo_or_mono=True)
+
+	def open(self, data, stereo_or_mono=True):
+		return Stream(self, data, self.framerate)
+
+	def get_framerate(self):
+		return self.framerate
+
+	def clean_up(self):
+		cfile = open(self.catalog_path, 'w+')
+		cfile.close()
+		print "Already Clean Done!"
+
+	def forget(self,filename):
+		self._catalog.pop(filename)
+		cfile = open(self.catalog_path, 'w+')	
+		pickle.dump(self._catalog, cfile)
+		cfile.close()
+		print "Already forgot << %s >>!"%filename
+
+	def items(self):
+		#sort dict, te is a tuple 
+		te = sorted(self._catalog.iteritems(),key=lambda d:d[0],reverse=False)
+		print "******* File List *******"
+		print "Total:%d"%len(self._catalog)
+		print " No.","    ","File Name"
+		for item in te:
+			print "  %s       %s"%(item[0],item[1])
+		print "***********************"
+
+
+# filename = os.path.basename(filepath)
+
+# print ("-----------------")
+# print ("FILE: << %s >>\n  IN PROCESSING....")%(filename)
+
+
+class Stream:
+	def __init__(self, Au, wdata, framerate):
+		self._parent   = Au 
+		self.data      = wdata
+		self.framerate = framerate
+		self._catalog  = self._parent._catalog
+		self.dpath     = self._parent.dpath
+
+		###################################################
+		###################################################
+	def hear(self):
+		for i in self._parent._catalog:
+			if self._parent._catalog[i] == self._parent.filename:
+				print "Notice: This File Has Been Saved Before!"
+				return
+
+		cache = []
+		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate,db=False))
+		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate,db=False))#Compute charatics
+
+		index = len(self._parent._catalog)-1
+
+		#Creat .bin file
+		bin_path = self._parent.dpath + "/" + str(index) + ".bin"
+		dfile = open(bin_path, 'w+')
+		np.array(cache,dtype=np.uint32).tofile(bin_path)
+		dfile.close()
+		del cache[:]
+		
+		#Update catalog
+		self._parent._catalog.update({index:self._parent.filename})
+		cfile = open(self._parent.pkl, 'w+')	
+		pickle.dump(self._parent._catalog, cfile)
+		cfile.close()
+		print "Hear Done!"
+
+	def _mono(self,channel):
 		'''
 		mono recognition
 
 		'''
+		MaxID = len(self._catalog)
 		#audio recognition
-		match_index, accuracy, avgdb, location = recognize(self.MaxID,wdata,framerate,channel,self.dpath)
+		match_index, accuracy, avgdb, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
 
-		return self.catalog[match_index],accuracy,avgdb,location
+		return self._catalog[match_index],accuracy,avgdb,location
 
-	def stereo(self,wdata0,wdata1,framerate):
+	def _stereo(self,FastSearch):
 		'''
 		stereo recognition
 
@@ -91,14 +198,21 @@ class Auana(object):
 		'''
 		chann0 = 0
 		chann1 = 1
-
+		MaxID = len(self._catalog)
 		#1> Analyze the chann0 first. 
-		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(self.MaxID,wdata0,framerate,chann0,self.dpath,Fast=None)
-		#if accuracy is high enough, directly return
-		if accuracy_L>0.7:
-			return self.catalog[MatchID_L], accuracy_L, avgdb_L, location_L
+		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
+		
+		#Fast search switch
+		if FastSearch is True:
+			FastSwitch = MatchID_L
+			#if accuracy is high enough, directly return
+			if accuracy_L>0.7:
+				return self._catalog[MatchID_L], accuracy_L, avgdb_L, location_L
+		else:
+			FastSwitch = None
+
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
-		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(self.MaxID,wdata1,framerate,chann1,self.dpath,Fast=MatchID_L)
+		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(MaxID,self.data[chann1],self.framerate,chann1,self.dpath,Fast=FastSwitch)
 
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)
@@ -109,51 +223,11 @@ class Auana(object):
 			location = location_R
 
 		if (MatchID_L != None) and (MatchID_L == MatchID_R):
-			return self.catalog[MatchID_L], accuracy ,average_db, location
+			return self._catalog[MatchID_L], accuracy ,average_db, location
 		else:
 			return None,0, average_db, 0
-	
 
-class Fana:
-	'''
-	Fileana: File Analysis. Now only support wav format.
-	'''
-	def __init__(self,auana,f):
-		self.auana = auana
-		self.data = []
-		self.framerate = 0
-
-		if os.path.splitext(os.path.basename(f))[1] == '.wav':
-			self.__wave_get_data(f)
-		else:
-			print ("Not support yet!")
-
-
-	def __wave_get_data(self,f):
-		#open wav file
-		wf = wave.open(f, 'rb')
-		nchannels, sampwidth, self.framerate, nframes = wf.getparams()[:4]
-
-		if nchannels != 2:
-			print ("Error: channels is not stereo!")
-			wf.close()
-			os._exit(1)
-
-		str_data = wf.readframes(nframes)
-		
-		wf.close()
-		self.data = np.fromstring(str_data, dtype = np.short)
-		self.data.shape = -1,2
-		self.data = self.data.T #Transpose
-
-	def recognize(self,STEREO=True,CH=0):
-		if STEREO is True:
-			return self.auana.stereo(self.data[0],self.data[1],self.framerate)
-		else:
-			return self.auana.mono(self.data[CH], CH, self.framerate)
-			
-
-	def detect_Broken_Frame(self):
+	def detect_broken_frame(self):
 		chann0 = detect_broken_frame(self.data[0], self.framerate)
 		chann1 = detect_broken_frame(self.data[1], self.framerate)
 		if chann0 == 0 and chann1 == 0:
@@ -161,92 +235,72 @@ class Fana:
 		else:
 			return {"left":chann0, "right": chann1}
 
+	def recognize(self,Mono=True,Fast=True,Ch=0):
+
+		if Mono is True:
+			return self._stereo(Fast)
+		else:
+			return self._mono(Ch)
+
+
+
 
 ##################################################################################################
-
-class Preprocess:
-	def __init__(self,DataPath=""):
-		if DataPath == "":
-			self.dpath = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data"
-		else:
-			self.dpath = DataPath
-		
-		self.pkl = self.dpath+'/AudioFingerCatalog.pkl'
-
-		#Create a new pkl file
-		if not os.path.exists(self.dpath):
-			os.makedirs(self.dpath)
-
-		try:
-			cfile = open(self.pkl, 'rb')
-			self.catalog = pickle.load(cfile)
-		except EOFError:
-			self.catalog = {}
-		except IOError:
-			cfile = open(self.pkl, 'w+')
-			self.catalog = {}
-		cfile.close()
-
-	def hear(self,filepath):
-		'''
-		catalog = {index:"sample.wav"}
-		'''
-		filename = os.path.basename(filepath)
-		index = len(self.catalog)
-
-		print ("FILE: << %s >>\n        IS PROCESSING....")%(filename)
-
-		for i in self.catalog:
-			if self.catalog[i] == filename:
-				print "  NOTICE: This File Has Been Saved Before!"
-				return
-
-		#Get data from wav file
-		wf = wave.open(filepath, 'rb')
-		nchannels, sampwidth, framerate, nframes = wf.getparams()[:4]
-		wave_data = np.fromstring(wf.readframes(nframes), dtype = np.short)
-		wf.close()
-		#Prepare data
-		wave_data.shape = -1,2
-		wave_data = wave_data.T#transpose
+def __load__catalog(path):
+	cfile   = open(path, 'rb')
+	catalog = pickle.load(cfile)
+	cfile.close()
+	return catalog
 
 
-		cache = []
-		cache.append(get_fingerprint(wdata=wave_data[0],framerate=framerate,db=False))
-		cache.append(get_fingerprint(wdata=wave_data[1],framerate=framerate,db=False))#Compute charatics
+def __load_file(f):
+	if os.path.splitext(os.path.basename(f))[1] == '.wav':
+		return _wave_get_data(f)
+	else:
+		raise IOError("Not support yet!")
 
-		#Creat .bin file
-		bin_path = self.dpath + "/" + str(index) + ".bin"
-		dfile = open(bin_path, 'w+')
-		np.array(cache,dtype=np.uint32).tofile(bin_path)
-		dfile.close()
-		del cache[:]
-		
-		#Update catalog
-		self.catalog.update({index:filename})
-		cfile = open(self.pkl, 'w+')	
-		pickle.dump(self.catalog, cfile)
-		cfile.close()
-		print "Hear<Save> Done!"
 
-	def clean_up(self):
-		cfile = open(self.pkl, 'w+')
-		cfile.close()
-		print "Already Clean Done!"
+def _wave_get_data(f):
+	#open wav file
+	wf = wave.open(f, 'rb')
 
-	def forget(self,filename):
-		self.catalog.pop(filename)
-		cfile = open(self.pkl, 'w+')	
-		pickle.dump(self.catalog, cfile)
-		cfile.close()
-		print "Already forgot << %s >>!"%filename
+	nchannels, sampwidth, framerate, nframes = wf.getparams()[:4]
+
+	str_data = wf.readframes(nframes)
 	
-	def items(self):
-		#sort dict, te is a tuple 
-		te = sorted(self.catalog.iteritems(),key=lambda d:d[0],reverse=False)
-		print "******* File List *******"
-		print "Total:%d"%len(self.catalog)
-		print " No.","    ","File Name"
-		for item in te:
-			print "  %s       %s"%(item[0],item[1])
-		print "***********************"
+	wf.close()
+	data = np.fromstring(str_data, dtype = np.short)
+	data.shape = -1,2
+	data = data.T #Transpose
+
+	return data, framerate, nchannels
+
+def fill_index(data,index):
+
+	table_path = __PATH__+"/data" + "/IndexTable.pkl"
+
+	itable = load_data(table_path)
+
+	for d in data[0]:
+		d = (d & 0xFFFF0000) >> 16
+		if index not in itable[d] and d!= 0:
+			itable[d].append(index)
+
+	f = open(table_path,"w")
+	pickle.dump(itable,f)
+	f.close()
+
+def load_data(p):
+	try:
+		cfile = open(p, 'rb')
+		c = pickle.load(cfile)
+	except EOFError:
+		c = {}
+	except IOError:
+		c = {}
+	if len(c) == 0:
+		cfile = open(p, 'w+')
+		for n in xrange(65537):
+			c[n] = []
+	cfile.close()
+	return c
