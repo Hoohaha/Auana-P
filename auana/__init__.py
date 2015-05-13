@@ -58,11 +58,9 @@ def Create(framerate=22050,path = DEFAULT_DATA_PATH):
 		print ("Warnning: Specify path\n\'%s\'\n is not exists, it is created."%path)
 	try:
 		catalog = _load__catalog(catalog_path)
-
 		if framerate == catalog["FRAMERATE"]:
 			raise ValueError("\'%s\' already exists!"%catalog_path)
-
-	except KeyError or EOFError or IOError:
+	except EOFError or KeyError  or IOError:
 		catalog = {}
 		catalog["FRAMERATE"] = framerate
 		pklf = open(catalog_path, 'w+')
@@ -108,15 +106,22 @@ class Auana:
 	def openf(self, file):
 
 		self.filename = os.path.basename(file)
-		data,framerate, nchannels = _load_file(file)
+		
+		data, framerate, nchannels = _load_file(file)
 
 		if framerate != self.framerate:
 			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
 
-		return self.open(data=data,stereo_or_mono=True)
+		return self.open(data)
 
-	def open(self, data, stereo_or_mono=True):
-		return Stream(self, data, self.framerate)
+	def open(self, data):
+		return Stream(self, data)
+	
+	def query(self,filename):
+		for i in self._catalog:
+			if self._catalog[i] == filename:
+				return True
+		return False
 
 	def get_framerate(self):
 		return self.framerate
@@ -137,17 +142,11 @@ class Auana:
 		#sort dict, te is a tuple 
 		te = sorted(self._catalog.iteritems(),key=lambda d:d[0],reverse=False)
 		print "******* File List *******"
-		print "Total:%d"%len(self._catalog)
+		print "Total:%d\n"%len(self._catalog)
 		print " No.","    ","File Name"
 		for item in te:
-			print "  %s       %s"%(item[0],item[1])
+			print "  %3s       %s"%(item[0],item[1])
 		print "***********************"
-
-
-# filename = os.path.basename(filepath)
-
-# print ("-----------------")
-# print ("FILE: << %s >>\n  IN PROCESSING....")%(filename)
 
 
 class Stream:
@@ -160,26 +159,24 @@ class Stream:
 	- detect_broken_frame: detect broken frame
 
 	'''
-	def __init__(self, Au, wdata, framerate):
+	def __init__(self, Au, wdata=None):
 		self._parent   = Au 
 		self.data      = wdata
-		self.framerate = framerate
-		self._catalog  = Au._catalog
-		self.dpath     = self._parent.dpath
+		self.framerate = Au.framerate
+		self.dpath     = Au.dpath
 
+	def write(self,data):
+		self.data = data
+		
 	###################################################
 	###################################################
 	def hear(self):
-		for i in self._catalog:
-			if self._catalog[i] == self._parent.filename:
-				print "Notice: This File Has Been Saved Before!"
-				return
-
+		filename = self._parent.filename
 		cache = []
 		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate,db=False))
 		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate,db=False))#Compute charatics
 
-		index = len(self._catalog)-1
+		index = len(self._parent._catalog)-1
 
 		#Creat .bin file
 		bin_path = self.dpath + "/" + str(index) + ".bin"
@@ -189,9 +186,10 @@ class Stream:
 		del cache[:]
 		
 		#Update catalog
-		self._catalog.update({index:self._parent.filename})
+		self._parent._catalog.update({index:filename})
+
 		cfile = open(self._parent.pkl, 'w+')	
-		pickle.dump(self._catalog, cfile)
+		pickle.dump(self._parent._catalog, cfile)
 		cfile.close()
 		print "Hear Done!"
 
@@ -201,11 +199,12 @@ class Stream:
 		mono recognition
 
 		'''
-		MaxID = len(self._catalog)
+		MaxID = len(self._parent._catalog)
 		#audio recognition
 		match_index, accuracy, avgdb, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
-
-		return self._catalog[match_index],accuracy,avgdb,location
+		if match_index is None:
+			return None
+		return self._parent._catalog[match_index],accuracy,avgdb,location
 
 	def _stereo(self,FastSearch):
 		'''
@@ -223,7 +222,11 @@ class Stream:
 		'''
 		chann0 = 0
 		chann1 = 1
-		MaxID = len(self._catalog)
+		if self.data.shape[0] != 2:
+			print "This is a mono stream. it can't stereo."
+			return
+
+		MaxID = len(self._parent._catalog)
 		#1> Analyze the chann0 first. 
 		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
 		
@@ -232,7 +235,7 @@ class Stream:
 			FastSwitch = MatchID_L
 			#if accuracy is high enough, directly return
 			if accuracy_L>0.7:
-				return self._catalog[MatchID_L], accuracy_L, avgdb_L, location_L
+				return self._parent._catalog[MatchID_L], accuracy_L, avgdb_L, location_L
 		else:
 			FastSwitch = None
 
@@ -248,7 +251,7 @@ class Stream:
 			location = location_R
 
 		if (MatchID_L != None) and (MatchID_L == MatchID_R):
-			return self._catalog[MatchID_L], accuracy ,average_db, location
+			return self._parent._catalog[MatchID_L], accuracy ,average_db, location
 		else:
 			return None,0, average_db, 0
 
@@ -260,12 +263,13 @@ class Stream:
 		else:
 			return {"left":chann0, "right": chann1}
 
-	def recognize(self,Mono=True,Fast=True,Ch=0):
+	def recognize(self,Mono=False,Fast=True,Ch=0):
 
 		if Mono is True:
-			return self._stereo(Fast)
-		else:
 			return self._mono(Ch)
+		else:
+			return self._stereo(Fast)
+			
 
 
 

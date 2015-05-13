@@ -1,20 +1,16 @@
-import sys, os
-__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-sys.path.append(__PATH__)
-
-from auana import Auana,Fana
+from auana import Auana
+import os
 
 print ("Title: File Search Demo")
 print ("Date: 2015.4.25\n")
 
 if __name__ == '__main__':
 	
-
-	auan = Auana()
+	au = Auana()
 
 	try:
-		File = Fana(auan,sys.argv[1])
-		name, accuracy, db, position = File.recognize()
+		stream = au.openf(sys.argv[1])
+		name, accuracy, db, position = stream.recognize()
 		print "Match Name: %s  Accuracy: %.3f  Volume: %d  Position: %d'%d"%(name, accuracy, db, position/60, position%60)
 	except IndexError:
 		print "Error: Invalid file or file path!"
