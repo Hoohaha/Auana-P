@@ -3,14 +3,14 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-from auana import Auana,Stream
+from auana import Auana,WaveForm
 
 print "Title: Mic Recognition Demo"
 
 pa = PyAudio()
 au = Auana()
 
-austream = Stream(au)
+w = WaveForm(au)
 
 samplerate = au.get_framerate() 
 chunk = 1024
@@ -45,10 +45,10 @@ while ("" == raw_input("Press \'Enter\' to start.")):
     wave_data.shape = -1,2
     wave_data = wave_data.T
 
-    austream.data = wave_data
+    w.data = wave_data
 
     start = time.time()
-    name, confidence, db, position= austream.recognize()
+    name, confidence, db, position= w.recognize()
     end = time.time() - start
 
     if name is not None:

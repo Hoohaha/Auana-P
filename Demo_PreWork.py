@@ -2,14 +2,13 @@ import time, os, sys
 from auana import Create, Auana
 
 
+print "Title: PreWork Demo\n-----------------------------------"
+print "This demo will extract the fingerprints from reference files and save them. \nFor Recognitions, this is necessary."
+
 try:
 	Create()
 except ValueError:
 	pass
-
-print "Title: PreWork Demo"
-print "This demo will extract the fingerprints from reference files and save them. \nFor Recognitions, this is necessary."
-
 au = Auana()
 f  = au.get_framerate()
 

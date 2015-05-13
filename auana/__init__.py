@@ -1,6 +1,5 @@
 import wave, os
 import cPickle as pickle
-import yaml
 from auana.recognize import recognize,get_fingerprint
 from auana.broframe import detect_broken_frame
 try:
@@ -50,22 +49,31 @@ DEFAULT_FRAMERATE     = 22050
 
 #create a new place to store data
 def Create(framerate=22050,path = DEFAULT_DATA_PATH):
-
-	catalog_path = path + CATALOG_FILE
+	catalog = {}
 
 	if not os.path.exists(path):
-		os.makedirs(path)
-		print ("Warnning: Specify path\n\'%s\'\n is not exists, it is created."%path)
-	try:
-		catalog = _load__catalog(catalog_path)
-		if framerate == catalog["FRAMERATE"]:
-			raise ValueError("\'%s\' already exists!"%catalog_path)
-	except EOFError or KeyError  or IOError:
-		catalog = {}
+	 	os.makedirs(path)
+
+
+	def _create_pkl():
 		catalog["FRAMERATE"] = framerate
 		pklf = open(catalog_path, 'w+')
 		pickle.dump(catalog, pklf)
 		pklf.close()
+
+	catalog_path = path + CATALOG_FILE
+
+
+	try:
+		catalog = _load__catalog(catalog_path)
+		if framerate == catalog["FRAMERATE"]:
+			raise ValueError("\'%s\' already exists!"%catalog_path)
+	except EOFError:
+		_create_pkl()
+	except KeyError:
+		_create_pkl()
+	except IOError:
+		_create_pkl()
 
 	print "Create Seccussfully!"
 
@@ -132,7 +140,7 @@ class Auana:
 		return self.open(data)
 
 	def open(self, data):
-		return Stream(self, data)
+		return WaveForm(self, data)
 	
 	def query(self,filename):
 		for i in self._catalog:
@@ -166,7 +174,7 @@ class Auana:
 		print "***********************"
 
 
-class Stream:
+class WaveForm:
 	'''
 	An audio data stream.
 

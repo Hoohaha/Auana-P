@@ -7,13 +7,15 @@ except ValueError:
 
 au = Auana()
 au.items()
-print au.get_framerate()
+framerate = au.get_framerate()
 
-stream = au.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
+print framerate
 
-stream.hear()
+wf = au.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
 
-print stream.recognize()
-print stream.recognize(Fast=False)
-print stream.recognize(Mono=True,Ch=0)
-print stream.detect_broken_frame()
+wf.hear()
+
+print wf.recognize()
+print wf.recognize(Fast=False)
+print wf.recognize(Mono=True,Ch=0)
+print wf.detect_broken_frame()
