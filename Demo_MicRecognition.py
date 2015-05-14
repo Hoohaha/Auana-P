@@ -3,20 +3,23 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-sys.path.append(__PATH__)
+from auana import Auana,WaveForm
 
-from auana import Auana
-
-print "Title: Mic Recognition Demo\n"
-
-chunk = 1024
-channels = 2
-samplerate = 44100
-format = paInt16
+print "Title: Mic Recognition Demo"
 
 pa = PyAudio()
-aua = Auana()
+au = Auana()
+
+w = WaveForm(au)
+
+samplerate = au.get_framerate() 
+chunk = 1024
+channels = 2
+format = paInt16
+
+print "Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16)
+
+
 
 Time = 5
 NUM = int((samplerate*Time)/float(chunk))
@@ -42,8 +45,10 @@ while ("" == raw_input("Press \'Enter\' to start.")):
     wave_data.shape = -1,2
     wave_data = wave_data.T
 
+    w.data = wave_data
+
     start = time.time()
-    name, confidence, db, position= aua.stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position= w.recognize()
     end = time.time() - start
 
     if name is not None:
