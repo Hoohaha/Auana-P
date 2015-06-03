@@ -67,14 +67,14 @@ Custom framerate and data path.
         except ValueError:
                 pass
 ```
-2) Manage the data storage functions:
-        query(file)
-        clean_up()  #clean all items
-        forget(file) #forget a file
-        items()   #show all item which was saved in storage
+2) Manage the data storage functions:<br>
+        query(file)<br>
+        clean_up()  #clean all items<br>
+        forget(file) #forget a file<br>
+        items()   #show all item which was saved in storage<br>
         
-        openf(file) #open a wave file and return a WaveForm Object
-        open(data) #open a wave data and return a WaveForm Object
+        openf(file) #open a wave file and return a WaveForm Object<br>
+        open(data) #open a wave data and return a WaveForm Object<br>
 2.WaveForm
 WaveForm is a class that can be used to recognize or detect broken frame.
 
