@@ -48,7 +48,7 @@ DEFAULT_FRAMERATE     = 22050
 
 
 #create a new place to store data
-def Create(framerate=22050,path = DEFAULT_DATA_PATH):
+def Create(framerate =22050,path = DEFAULT_DATA_PATH):
 	catalog = {}
 
 	if not os.path.exists(path):
@@ -224,7 +224,7 @@ class WaveForm:
 		mono recognition
 
 		'''
-		MaxID = len(self._parent._catalog)
+		MaxID = len(self._parent._catalog)-1
 		#audio recognition
 		match_index, accuracy, avgdb, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
 		if match_index is None:
@@ -251,7 +251,7 @@ class WaveForm:
 			print "This is a mono stream. it can't stereo."
 			return
 
-		MaxID = len(self._parent._catalog)
+		MaxID = len(self._parent._catalog)-1
 		#1> Analyze the chann0 first. 
 		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
 		

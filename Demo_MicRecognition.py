@@ -36,7 +36,6 @@ stream = pa.open(
 while ("" == raw_input("Press \'Enter\' to start.")):
     N = NUM
     print "  Listening..."
-    # wave_data = []
     while N:
         save_buffer.append(stream.read(chunk))
         N -= 1

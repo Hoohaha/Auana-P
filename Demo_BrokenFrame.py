@@ -17,11 +17,12 @@ if __name__ == '__main__':
 
 	bf = Detect_broken_frame(d[0],d[1],f)
 
-	if bf is None:
-		print "No broken-frames found."
-	else:
-		for b in bf:
-			print "%s channel"%b
+
+	for b in bf:
+		print "%s channel"%b
+		if bf[b] == 0:
+			print "no broken frames is detected."
+		else:
 			for ti in bf[b]:
 				print ti 
 

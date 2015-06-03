@@ -53,7 +53,7 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 	uint32 x;
 
 	int Threshold, dw_limit, up_limit;
-	Threshold = (int)(wsize * 10);
+	Threshold = (int)(wsize * 7);
 	dw_limit = wsize-1;
 	up_limit = wsize+2;
 	max_index = slen - wsize;

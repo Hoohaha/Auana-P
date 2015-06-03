@@ -9,8 +9,8 @@ if __name__ == '__main__':
 	au = Auana()
 
 	try:
-		stream = au.openf(sys.argv[1])
-		name, accuracy, db, position = stream.recognize()
+		w = au.openf(sys.argv[1])
+		name, accuracy, db, position = w.recognize()
 		print "Match Name: %s  Accuracy: %.3f  Volume: %d  Position: %d'%d"%(name, accuracy, db, position/60, position%60)
 	except IndexError:
 		print "Error: Invalid file or file path!"
