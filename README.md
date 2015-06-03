@@ -30,65 +30,77 @@ So for the automation of audio validation, it may be a good idea. It is still in
 
 ##Quickly Start
 -----------------------------------
-1) Prework: The recognition need to get the reference information of audios before starting of your work.<br>
-The "Preprocess" is a class can be used to memory an audio charactics. The following example shows how to use it.<br>
-
-import module:
+1.The class Auana is a data storage to manage the data. If you first use want to use the Auana, you must create a git and init it.<br>
+1) Create a new storage to store the data.
+The defalut framerate is 22500, data path is ../auana/data.
+If you want to use the default configuration, see the following example.
 ```python
-        from auana import Preprocess
+        try:
+                Create()
+        except ValueError:
+                pass
 ```
 
-
-Configure the path where the data will be saved. 
-```pyhthon
-        p = Preprocess("data_path")
+Custom framerate.
+```python
+        f = 16000
+        try:
+                Crate(framerate=f)
+        except ValueError:
+                pass
+```
+Custom data path.
+```python
+        data_path = "C:/data"
+        try:
+                Crate(path=data_path)
+        except ValueError:
+                pass
 ```
 
-
-If not, it will use default configuration: "auana/data"
+Custom framerate and data path.
 ```python
-        p = Preprocess()
+        f = 16000
+        data_path = "C:/data"
+        try:
+                Crate(framerate=f, path=data_path)
+        except ValueError:
+                pass
 ```
-
-
-Memory an audio, before you start to Analyze
-```python        
-        p.hear("sample.wav")
-```
-
-
-If you want to know how many items that was saved in "data_path"
-```python
-        p.items()
-```
-
-
-Clear all.
-```python
-        #This functions should be used with caution.
-        p.clean_up()
-```   
-2) Recognition: There are two calss: Auana and Fana.<br>
-Fana: File recognition(only support .wav)<br>
-For example:<br>
-```python
-        from auana import Auana,Fana
+2) Manage the data storage functions:
+        query(file)
+        clean_up()  #clean all items
+        forget(file) #forget a file
+        items()   #show all item which was saved in storage
         
-        #data_path: where is the data
-        aua = Auana("data_path")
-        
-        #mono recognition
-        print Fana(aua,"sample.wav").mono_start()
-        
-        #stereo recognition
-        print Fana(aua,"sample.wav").stereo_start()
-```
-3) Broken-Frame detection: This is a special funtions to be used to detect broken-frame.<br>
-It will tell you wheather the audi lost frames, and will return where lost it.<br>
-For example:<br>
+        openf(file) #open a wave file and return a WaveForm Object
+        open(data) #open a wave data and return a WaveForm Object
+2.WaveForm
+WaveForm is a class that can be used to recognize or detect broken frame.
+
+open an waveform
 ```python
-        Fana(aua,"sample.wav").broken_frame()
+        from auana import Auana
+
+        au = Auana()
+
+	w = au.openf(sys.argv[1])
 ```
+1> Save the fingerprints into the storage.
+```python
+        w.hear()
+```
+2> For recognition:
+
+```python
+        name, accuracy, db, position = w.recognize()
+```
+3>For broken frame detection:
+```python
+        bf = w.detect_broken_frame()
+```
+
+
 ##Example User's Guide
 -----
 >1> Prework<br>
