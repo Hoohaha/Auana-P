@@ -99,16 +99,16 @@ def Load_file(f):
 
 
 
-class Auana:
+class Storage:
 	'''
-	Auana is class to manage data storage.
+	Storage is class to manage data storage.
 		- init specified data storage
 		- open 'AudioFingerCatalog.pkl' and get catalog
 		- qurey a file if it was saved in 'path'.
 
-	Auana Storage Operations:
-		-- get_framerate: get the configuration of framerate in Auana storage.
-		-- clean_up: clean all items in Auana storage.
+	Storage Operations:
+		-- get_framerate: get the configuration of framerate in storage.
+		-- clean_up: clean all items in storage.
 		-- forget: delete specify item.
 		-- items: show all items.
 

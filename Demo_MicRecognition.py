@@ -3,16 +3,16 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-from auana import Auana,WaveForm
+from auana import Storage, WaveForm
 
 print "Title: Mic Recognition Demo"
 
-pa = PyAudio()
-au = Auana()
+pa      = PyAudio()
+storage = Storage()
 
-w = WaveForm(au)
+w = WaveForm(storage)
 
-samplerate = au.get_framerate() 
+samplerate = storage.get_framerate()
 chunk = 1024
 channels = 2
 format = paInt16

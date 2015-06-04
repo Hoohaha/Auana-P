@@ -5,7 +5,7 @@ if __name__ == '__main__':
 	print "Title: Broken Frame Demo"
 	print "Note: This demo will find where is broken-frames in a song.\n\n"
 
-	au = Auana()
+
 	try:
 		path = sys.argv[1]
 	except IndexError:
@@ -17,12 +17,8 @@ if __name__ == '__main__':
 
 	bf = Detect_broken_frame(d[0],d[1],f)
 
-	if bf is None:
-		print "No broken-frames found."
-	else:
-		for b in bf:
-			print "%s channel"%b
-			for ti in bf[b]:
-				print ti 
+	print "left  channel:", bf["left"]
+	print "right channel:", bf["right"]
+
 
 	os.system("pause")

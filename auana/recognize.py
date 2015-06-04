@@ -208,13 +208,13 @@ def compare(sdata,tdata,tlen,slen,window_size,offset,num_win):
 	#Old version Python
 	#***********************************************************#
 	#***********************************************************#
-	min_seq=0
-	min_seq0=0
-	confidence=0
-	next_begain=0
-	max_index = sdata.shape[-1]-window_size
-	stop_condition = 15
-	threshold = window_size*FIN_BIT*0.3
+	min_seq         = 0
+	min_seq0        = 0
+	confidence      = 0
+	next_begain     = 0
+	max_index       = sdata.shape[-1]-window_size
+	stop_condition  = 15
+	threshold       = window_size*FIN_BIT*0.3
 
 	#Arithmetic sequence tolerance uplimit and down limit
 	up_limit = window_size+2

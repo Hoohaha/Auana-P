@@ -30,7 +30,9 @@ So for the automation of audio validation, it may be a good idea. It is still in
 
 ##Quickly Start
 -----------------------------------
-1.The class Auana is a data storage to manage the data. If you first use want to use the Auana, you must create a git and init it.<br>
+1.The class Storage is a data management. 
+If you want to use the recognition, you must create a storage and init it.<br>
+
 1) Create a new storage to store the data.
 The defalut framerate is 22500, data path is ../auana/data.
 If you want to use the default configuration, see the following example.

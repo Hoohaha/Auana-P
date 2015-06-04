@@ -1,5 +1,5 @@
 import time, os, sys
-from auana import Create, Auana
+from auana import Create, Storage
 
 
 print "Title: PreWork Demo\n-----------------------------------"
@@ -9,8 +9,8 @@ try:
 	Create()
 except ValueError:
 	pass
-au = Auana()
-f  = au.get_framerate()
+storage = Storage()
+f  = storage.get_framerate()
 
 print "NOTE: The sample rate of songs must be %d, format must be \".wav\".\n-----------------------------------\n\n"%f
 
@@ -31,13 +31,13 @@ for parent, dirnames, filenames in os.walk(sample_path):
 
 			print ("-----------------\nILE: << %s >>\n  IN PROCESSING....")%(filename)
 
-			if au.query(filename) is False:
-				au.openf(filepath).hear()
+			if storage.query(filename) is False:
+				storage.openf(filepath).hear()
 
 			end = time.time()
 			
 			print "time cost %f \n"%(end-start)
 			print " "
 e=time.time()
-au.items()
+storage.items()
 print "total time %f'%f"%((e-s)/60,(e-s)%60)
