@@ -1,17 +1,17 @@
-from auana import Auana, Create
+from auana import Storage, Create
 
 try:
 	Create()
 except ValueError:
 	pass
 
-au = Auana()
-au.items()
-framerate = au.get_framerate()
+s = Storage()
+s.items()
+framerate = s.get_framerate()
 
 print framerate
 
-wf = au.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
+wf = s.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
 
 wf.hear()
 

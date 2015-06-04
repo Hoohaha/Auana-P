@@ -41,14 +41,14 @@ Preprocess(Prework before Analyze)
 CATALOG_FILE          = '/AudioFingerCatalog.pkl'
 
 #default catalog path: auana/data/AudioFingerCatalog.pkl
-DEFAULT_DATA_PATH  = __PATH__ + '/data'
+DEFAULT_DATA_PATH     = __PATH__ + '/data'
 
 #default framerate
 DEFAULT_FRAMERATE     = 22050
 
 
 #create a new place to store data
-def Create(framerate=22050,path = DEFAULT_DATA_PATH):
+def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 	catalog = {}
 
 	if not os.path.exists(path):
@@ -117,7 +117,7 @@ class Storage:
 		-- openf: open a file and create a obejct Stream
 
 	'''
-	def __init__(self, path = DEFAULT_DATA_PATH, framerate = DEFAULT_FRAMERATE):
+	def __init__(self, path = DEFAULT_DATA_PATH):
 		self.dpath        = path
 		self.pkl = path + CATALOG_FILE
 
