@@ -43,16 +43,18 @@ If you want to use the default configuration, see the following example.
                 pass
 ```
 
-Custom framerate.
+
 ```python
+#Custom framerate.
         f = 16000
         try:
                 Crate(framerate=f)
         except ValueError:
                 pass
 ```
-Custom data path.
+
 ```python
+#Custom data path.
         data_path = "C:/data"
         try:
                 Crate(path=data_path)
@@ -60,8 +62,9 @@ Custom data path.
                 pass
 ```
 
-Custom framerate and data path.
+
 ```python
+#Custom framerate and data path.
         f = 16000
         data_path = "C:/data"
         try:
@@ -77,16 +80,16 @@ Custom framerate and data path.
 	items()      #show all item which was saved in storage
 	commit()     #commit the changes
         
-        openf(file)  #open a wave file and return a WaveForm Object
+	openf(file)  #open a wave file and return a WaveForm Object
 
 2.WaveForm
 WaveForm is a class that can be used to recognize or detect broken frame.
 
 open an waveform
 ```python
-        from auana import Storage
+	from auana import Storage
 
-        sto = Storage()
+	sto = Storage()
 
 	w = sto.openf("sample.wav")
 ```
@@ -105,16 +108,16 @@ or:
 
 1> Save the fingerprints into the storage.
 ```python
-        w.hear()
+	w.hear()
 ```
 2> For recognition:
 
 ```python
-        name, accuracy, position = w.recognize()
+	name, accuracy, position = w.recognize()
 ```
 3>For broken frame detection:
 ```python
-        bf = w.detect_broken_frame()
+	bf = w.detect_broken_frame()
 ```
 4>Get the volume:
 
