@@ -1,14 +1,16 @@
 import os,time,sys
 __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 sys.path.append(os.path.dirname(__PATH__))
-from auana import Auana,Fana
+from auana import *
+
 # search .wav file
 dir_audio0 = "E:/sample"
 
+storage = Storage()
 
 File_num = 0
 NUM = 0
-a = Auana()
+
 ab = time.clock()
 for parent, dirnames, filenames in os.walk(dir_audio0):
 	for filename in filenames:
@@ -18,7 +20,7 @@ for parent, dirnames, filenames in os.walk(dir_audio0):
 			path = os.path.join(parent, filename)
 			path = path.replace('\\','/')
 			File_num += 1
-			res = Fana(a,path).recognize()
+			res = storage.openf(path).recognize()
 			if res[0] == "Come And Get Your Love.wav":
 				NUM += 1
 			else:

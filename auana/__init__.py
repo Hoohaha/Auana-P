@@ -145,6 +145,7 @@ class Storage:
 			cfile.close()
 			raise Warning("The \'AudioFingerCatalog.pkl\' is empty, please crate a new.")
 
+
 	def openf(self, file):
 		self.filename = os.path.basename(file)
 		data, framerate, nchannels = Load_file(file)

@@ -127,7 +127,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	if tlen < 90:
 	 	window_size, offset, fault_tolerant = 4,   1,  10
 	elif 90 <= tlen <= 900:
-		window_size, offset, fault_tolerant = 16,  16,  10
+		window_size, offset, fault_tolerant = 16,  1,  10
 	else:
 		window_size, offset, fault_tolerant = 100, 3,  6
 

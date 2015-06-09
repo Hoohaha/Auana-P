@@ -6,28 +6,34 @@ import numpy as np
 __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 sys.path.append(os.path.dirname(__PATH__))
 
-from auana import Auana
+from auana import *
 
 print " Mic Recognition Demo\n"
 
+
+storage = Storage()
+w = WaveForm(storage)
+
 chunk = 1024
 channels = 2
-samplerate = 44100
+samplerate = storage.get_framerate()
 format = paInt16
 
-import matplotlib.pyplot as plt  
+import matplotlib.pyplot as plt
+
 plt.title("Diagram")
 plt.xlabel('Record Time (s)')
 plt.ylabel('Search Time (s)')
 
 
-pa = PyAudio()
-
 Time = [1,2,3,4,5,6,7,8,9,10,15,20,25,40]
 #NUM = int((samplerate*Time)/float(chunk))
 b=[]
 save_buffer = []
-#open audio stream    
+
+
+pa = PyAudio()
+#open audio stream
 stream = pa.open(
             format   = format, 
             channels = channels, 
@@ -48,8 +54,10 @@ for i in Time:
     wave_data.shape = -1,2
     wave_data = wave_data.T
 
+    w.data = wave_data
+
     start = time.time()
-    name, confidence, db, position= Auana().stereo(wave_data[0],wave_data[1],samplerate)
+    name, confidence, db, position = w.recognize()
     end = time.time() - start
 
     if name is not None:
@@ -62,9 +70,7 @@ for i in Time:
     b.append(end)
     save_buffer = []
 
-# for a in xrange(2):
-#     print Time[a],b[a],Time[a+1],b[a+1]
-#     plt.plot([Time[a],b[a]],[Time[a+1],b[a+1]])
+
 plt.plot(Time,b)
 plt.show()  
 #stop stream
