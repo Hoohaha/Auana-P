@@ -71,24 +71,38 @@ Custom framerate and data path.
 ```
 2) Manage the data storage functions:<br>
 
-	query(file)<br>
-	clean_up()  #clean all items<br>
-	forget(file) #forget a file<br>
-	items()   #show all item which was saved in storage<br>
+	query(file)
+	clean_up()   #clean all items
+	forget(file) #forget a file
+	items()      #show all item which was saved in storage
+	commit()     #commit the changes
         
-        openf(file) #open a wave file and return a WaveForm Object<br>
-        open(data) #open a wave data and return a WaveForm Object<br>
+        openf(file)  #open a wave file and return a WaveForm Object
+
 2.WaveForm
 WaveForm is a class that can be used to recognize or detect broken frame.
 
 open an waveform
 ```python
-        from auana import Auana
+        from auana import Storage
 
-        au = Auana()
+        sto = Storage()
 
-	w = au.openf(sys.argv[1])
+	w = sto.openf("sample.wav")
 ```
+
+or:
+
+```python
+	from auana import Storage
+	
+	sto = Storage()
+	
+	w = WaveForm(sto)
+	
+	w.write(data) #w.data=data          #data:wave data
+```
+
 1> Save the fingerprints into the storage.
 ```python
         w.hear()
@@ -96,11 +110,16 @@ open an waveform
 2> For recognition:
 
 ```python
-        name, accuracy, db, position = w.recognize()
+        name, accuracy, position = w.recognize()
 ```
 3>For broken frame detection:
 ```python
         bf = w.detect_broken_frame()
+```
+4>Get the volume:
+
+```python
+	v = w.get_volume()
 ```
 
 
