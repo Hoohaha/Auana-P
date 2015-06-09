@@ -3,29 +3,37 @@ from pyaudio import PyAudio, paInt16
 import wave , sys , os, time
 import numpy as np
 
-from auana import Storage, WaveForm
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+sys.path.append(os.path.dirname(__PATH__))
 
-print "Title: Mic Recognition Demo"
+from auana import *
 
-pa      = PyAudio()
+print " Mic Recognition Demo\n"
+
+
 storage = Storage()
-
 w = WaveForm(storage)
 
-samplerate = storage.get_framerate()
 chunk = 1024
 channels = 2
+samplerate = storage.get_framerate()
 format = paInt16
 
-print "Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16)
+import matplotlib.pyplot as plt
+
+plt.title("Diagram")
+plt.xlabel('Record Time (s)')
+plt.ylabel('Search Time (s)')
 
 
-
-Time = 5
-NUM = int((samplerate*Time)/float(chunk))
-
+Time = [1,2,3,4,5,6,7,8,9,10,15,20,25,40]
+#NUM = int((samplerate*Time)/float(chunk))
+b=[]
 save_buffer = []
-#open audio stream    
+
+
+pa = PyAudio()
+#open audio stream
 stream = pa.open(
             format   = format, 
             channels = channels, 
@@ -33,8 +41,9 @@ stream = pa.open(
             input    = True,
             frames_per_buffer  = chunk
             )
-while ("" == raw_input("Press \'Enter\' to start.")):
-    N = NUM
+#while ("" == raw_input("Continue ?")):
+for i in Time:
+    N = int((samplerate*i)/float(chunk))
     print "  Listening..."
     # wave_data = []
     while N:
@@ -48,7 +57,7 @@ while ("" == raw_input("Press \'Enter\' to start.")):
     w.data = wave_data
 
     start = time.time()
-    name, confidence, position= w.recognize()
+    name, confidence, db, position = w.recognize()
     end = time.time() - start
 
     if name is not None:
@@ -58,8 +67,12 @@ while ("" == raw_input("Press \'Enter\' to start.")):
     print "-------------------------------------"
     print "                    Time Cost: %.3f"%end
     print " \n"
+    b.append(end)
     save_buffer = []
 
+
+plt.plot(Time,b)
+plt.show()  
 #stop stream
 stream.stop_stream()
 stream.close()

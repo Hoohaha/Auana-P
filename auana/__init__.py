@@ -1,6 +1,6 @@
 import wave, os
 import cPickle as pickle
-from auana.recognize import recognize,get_fingerprint
+from auana.recognize import recognize,get_fingerprint,compute_volume
 from auana.broframe import detect_broken_frame
 try:
 	import numpy as np
@@ -8,6 +8,8 @@ except ImportError:
 	print("Please build and install the numpy Python ")
 
 __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+
+
 """
 =======================================
 Auana: An Audio Data Analyze Algorithm
@@ -27,7 +29,7 @@ Load_file
 
 
 
-Storage(Data storage and Data Management)
+Storage (Data storage and Data Management)
 ===========
 	open            -- open and init a WaveForm by data
 	openf           -- open and init a WaveForm by file
@@ -40,13 +42,14 @@ Storage(Data storage and Data Management)
 	
 
 
-WaveForm               
+WaveForm
 =========
 	
 	wirte           -- rewrite the data
 	broken_frame   	-- broken frame detection.
 	recognize       -- audio recognize
 	hear            -- Hear a song and save the info.
+	get_volume      -- return the volume of this waveform
 
 """
 
@@ -54,7 +57,7 @@ WaveForm
 #catalog file name
 CATALOG_FILE          = '/AudioFingerCatalog.pkl'
 
-#default catalog path: auana/data/AudioFingerCatalog.pkl
+#default catalog path: ../data/AudioFingerCatalog.pkl
 DEFAULT_DATA_PATH     = os.path.dirname(__PATH__) + '/data'
 
 #default framerate
@@ -192,6 +195,12 @@ class Storage:
 		cfile.close()
 
 
+
+
+
+
+
+
 class WaveForm:
 	'''
 	An audio data stream.
@@ -219,8 +228,8 @@ class WaveForm:
 	def hear(self):
 		filename = self._parent.filename
 		cache = []
-		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate,db=False))
-		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate,db=False))#Compute charatics
+		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate))
+		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate))#Compute charatics
 
 		index = len(self._parent._catalog)-1
 
@@ -245,10 +254,10 @@ class WaveForm:
 		'''
 		MaxID = len(self._parent._catalog)-1
 		#audio recognition
-		match_index, accuracy, avgdb, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
+		match_index, accuracy, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
 		if match_index is None:
 			return None
-		return self._parent._catalog[match_index],accuracy,avgdb,location
+		return self._parent._catalog[match_index],accuracy, location
 
 	def _stereo(self,FastSearch):
 		'''
@@ -267,48 +276,52 @@ class WaveForm:
 		chann0 = 0
 		chann1 = 1
 		if self.data.shape[0] != 2:
-			print "This is a mono stream. it can't stereo."
-			return
+			raise ValueError("This is a mono stream. it can't stereo.")
 
 		MaxID = len(self._parent._catalog)-1
 		#1> Analyze the chann0 first. 
-		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
+		MatchID_L, accuracy_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
 		
 		#Fast search switch
 		if FastSearch is True:
 			FastSwitch = MatchID_L
 			#if accuracy is high enough, directly return
 			if accuracy_L >= 0.7:
-				return self._parent._catalog[MatchID_L], accuracy_L, avgdb_L, location_L
+				return self._parent._catalog[MatchID_L], accuracy_L, location_L
 		else:
 			FastSwitch = None
 
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
-		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(MaxID,self.data[chann1],self.framerate,chann1,self.dpath,Fast=FastSwitch)
+		MatchID_R, accuracy_R, location_R = recognize(MaxID,self.data[chann1],self.framerate,chann1,self.dpath,Fast=FastSwitch)
 
 		# print accuracy_L,accuracy_R
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)
-		average_db = round((avgdb_L+avgdb_R)/2,3)
+
 		if accuracy_L > accuracy_R:
 			location = location_L
 		else:
 			location = location_R
 
 		if (MatchID_L != None) and (MatchID_L == MatchID_R):
-			return self._parent._catalog[MatchID_L], accuracy ,average_db, location
+			return self._parent._catalog[MatchID_L], accuracy , location
 		else:
-			return None,0, average_db, 0
+			return None, 0, 0
 
-	def detect_broken_frame(self):
-		return Detect_broken_frame(self.data[0],self.data[1],self.framerate)
+
 
 	def recognize(self,Mono=False,Fast=True,Ch=0):
 		if Mono is True:
 			return self._mono(Ch)
 		else:
 			return self._stereo(Fast)
-			
+
+
+	def detect_broken_frame(self):
+		return Detect_broken_frame(self.data[0],self.data[1],self.framerate)
+
+	def get_volume(self, Ch=0):
+		return compute_volume(self.data[Ch], self.framerate)
 
 
 

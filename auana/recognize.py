@@ -113,7 +113,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 		   accuarcy: 0~1, it means the how many fingerprint matched in reference file.
 	'''
 
-	tdata,avgdb    = get_fingerprint(wdata,framerate)
+	tdata          = get_fingerprint(wdata,framerate)
 	max_accuracy   = 0
 	match_index    = None
 	match_position = 0
@@ -127,7 +127,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	if tlen < 90:
 	 	window_size, offset, fault_tolerant = 4,   1,  10
 	elif 90 <= tlen <= 900:
-		window_size, offset, fault_tolerant = 16,  1,  10
+		window_size, offset, fault_tolerant = 16,  1,  7
 	else:
 		window_size, offset, fault_tolerant = 100, 3,  6
 
@@ -185,7 +185,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 
 	#transfer to time scale
 	match_position = match_position * (DEF_FFT_SIZE / DEF_OVERLAP) / framerate
-	return match_index, max_accuracy, avgdb, match_position
+	return match_index, max_accuracy, match_position
 
 
 #######################################################
@@ -229,7 +229,7 @@ def compare(sdata,tdata,tlen,slen, compare_config):
 ###########################################################
 #   Get audio fingerprint
 ###########################################################
-def get_fingerprint(wdata,framerate,db=True):
+def get_fingerprint(wdata,framerate):
 	'''
 	Compute the fingerprint.
 	'''
@@ -279,7 +279,6 @@ def get_fingerprint(wdata,framerate,db=True):
 		s = s + DEF_FFT_SIZE/DEF_OVERLAP
 		e = s + DEF_FFT_SIZE
 
-
 		subfin = 0L
 
 		for n in xrange(0,FIN_BIT):
@@ -292,8 +291,7 @@ def get_fingerprint(wdata,framerate,db=True):
 			max_b  = 0
 
 			for b in xrange(b0,b1):
-				if (xfp[b] <= 50):
-					continue
+
 				#Compute the max frequency value
 				if (xfp[b] > max_fp):
 					max_fp = xfp[b]
@@ -307,10 +305,44 @@ def get_fingerprint(wdata,framerate,db=True):
 
 	fin = np.array(fin,dtype = np.uint32)
 
-	if db is True:
-		return fin,0
-
  	return fin
+
+
+
+
+
+def compute_volume(wdata,framerate):
+	#data length
+	data_len = wdata.shape[-1]
+
+	#hanning window
+	hanning = _hann(DEF_FFT_SIZE, sym=0)
+
+	num = data_len/DEF_FFT_SIZE
+
+	scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+
+	max_fre = int(3000/scale)
+
+	db_avg = 0
+
+	for n in xrange(num):
+		#2)hanning window to smooth the edge
+		xs = np.multiply(wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE], hanning)
+
+		#fft transfer
+		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_fre]))
+
+		db_one_frame = xfp.mean()
+
+		db_avg += db_one_frame
+
+	db_avg = round(db_avg/n,2)
+
+	return db_avg
+
+
+
 
 
 def _hann(M, sym=True):
