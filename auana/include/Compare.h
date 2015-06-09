@@ -10,6 +10,14 @@ struct match_info
 	int position;
 	/* data */
 };
+struct compare_parameters
+{
+	short window_size;
+	short offset;
+	short threshold;
+	short num_win;
+};
+
 /*
  * Author: Haley Guo, Date: 2015.1.8
  * version:0.2
@@ -40,4 +48,4 @@ int hamming_weight(uint32 x);
  *        offset: window move.
  *		  num_win: numbers of window
  */
-struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset, int num_win);
+struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, struct compare_parameters con);

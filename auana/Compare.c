@@ -35,37 +35,42 @@ int hamming_weight(uint32 x)
  *        offset: window move.
  *		  num_win: numbers of window
  */
-struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int wsize, short offset, int num_win)
+struct match_info Compare(uint32 *tData, uint32 *sData, int tlen, int slen, struct compare_parameters con)
 {
-	register int n=0,i=0,index=0;
-	
-	short _offset=1,temp=0,confidence=0;
-
-	int max_index=0, next_begain=0;
-	int dismin=0, dis=0, min_seq=0, min_seq0=0;
-
-	struct match_info m = {0,0};
-
 	const uint32 m1  = 0x55555555; //binary: 0101...  	
 	const uint32 m2  = 0x33333333; //binary: 00110011..  
 	const uint32 m4  = 0x0f0f0f0f; //binary:  4 zeros,  4 ones ...
 	const uint32 h01 = 0x01010101; //the sum of 256 to the power of 0,1,2,3... 
-	uint32 x;
 
-	int Threshold, dw_limit, up_limit;
-	Threshold = (int)(wsize * 10);
-	dw_limit = wsize-1;
-	up_limit = wsize+2;
-	max_index = slen - wsize;
+
+	uint32 x=0;
+
+	register int n=0,i=0,index=0;
+
+	struct match_info m = {0,0};
+
+	short wsize     = con.window_size;
+	short threshold = con.threshold;
+	short offset    = con.offset;
+	short num_win   = con.num_win;
+
+	int dw_limit = wsize-1;
+	int up_limit = wsize+2;
+
+	int max_index   = slen-wsize;
+	int next_begain = 0;
+
+	short temp=0, confidence=0;
+	int dismin=0, dis =0, min_seq=0, min_seq0=0;
 
 	// printf(">>>>>>>>>>>>>>>>>%d  %d  %d %d\n",wsize,slen,dw_limit,up_limit);//For Debug
 
 	for(i=0; i<num_win; i++)//target file
 	{
-		dismin   = Threshold;
+		dismin   = threshold;
 		min_seq0 = min_seq;
 
-		for(index = next_begain; index<max_index; index += _offset)//source file
+		for(index = next_begain; index<max_index; index += offset)//source file
 		{	
 			//compute the distance of two buffer
 			dis = 0;
@@ -90,14 +95,12 @@ struct match_info Compare(uint32 *tData,uint32 *sData, int tlen, int slen, int w
 
 		temp = min_seq-min_seq0;
 		
-		if (dismin<Threshold && temp>=dw_limit && temp<=up_limit)
+		if (dismin<threshold && temp>=dw_limit && temp<=up_limit)
 		{
 			// printf("  a:%d  slen; %d  dismin: %d  minseq: %d, minseq0: %d\n",i,slen,dismin,min_seq,min_seq0);//For Debug
 			confidence ++;
 			next_begain = min_seq;
 		}
-		if (confidence == 6)
-			_offset = offset;
 
 		if (i>20 && confidence < 3)
 			return m;//stop find

@@ -13,27 +13,41 @@ __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 Auana: An Audio Data Analyze Algorithm
 =======================================
 
-auana(base)
+Create
 ===========
 
-   broken_frame    	-- broken frame detection.
-   mono   			-- mono recognize.
-   stereo 			-- stereo recognize.
+	Create a new Storage to store the data.
 
-Fana(Auana From File)               
+Detect_broken_frame
+===========
+
+
+Load_file
+===========
+
+
+
+Storage(Data storage and Data Management)
+===========
+	open            -- open and init a WaveForm by data
+	openf           -- open and init a WaveForm by file
+	query           -- query a file if saved in specify storage
+	get_framerate   -- get the framerate for this storage
+	clean_up        -- delete all data
+	forget          -- delete a specify file
+	items           -- return all itmes which saved in storage
+	commit          -- commit all changes into storage
+	
+
+
+WaveForm               
 =========
-
+	
+	wirte           -- rewrite the data
 	broken_frame   	-- broken frame detection.
-   	mono_start   	-- mono recognize.
-   	stereo_start 	-- stereo recognize.
-
-
-Preprocess(Prework before Analyze)
-=========
+	recognize       -- audio recognize
 	hear            -- Hear a song and save the info.
-	clean_up		-- Delete all data
-	forgot          -- Delete a specify song's infomation
-	itmes			-- Show the items which was saved in it's internal.
+
 """
 
 
@@ -41,7 +55,7 @@ Preprocess(Prework before Analyze)
 CATALOG_FILE          = '/AudioFingerCatalog.pkl'
 
 #default catalog path: auana/data/AudioFingerCatalog.pkl
-DEFAULT_DATA_PATH     = __PATH__ + '/data'
+DEFAULT_DATA_PATH     = os.path.dirname(__PATH__) + '/data'
 
 #default framerate
 DEFAULT_FRAMERATE     = 22050
@@ -137,10 +151,12 @@ class Storage:
 
 		if framerate != self.framerate:
 			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
-		return self.open(data)
+		
+		w = WaveForm(self)
+		w.data = data
 
-	def open(self, data):
-		return WaveForm(self, data)
+		return w
+
 	
 	def query(self,filename):
 		for i in self._catalog:
@@ -152,16 +168,12 @@ class Storage:
 		return self.framerate
 
 	def clean_up(self):
-		cfile = open(self.catalog_path, 'w+')
+		cfile = open(self.pkl, 'w+')
 		cfile.close()
 		print "Already Clean Done!"
 
 	def forget(self,filename):
 		self._catalog.pop(filename)
-		cfile = open(self.catalog_path, 'w+')	
-		pickle.dump(self._catalog, cfile)
-		cfile.close()
-		print "Already forgot << %s >>!"%filename
 
 	def items(self):
 		#sort dict, te is a tuple 
@@ -172,6 +184,11 @@ class Storage:
 		for item in te:
 			print "  %3s       %s"%(item[0],item[1])
 		print "***********************"
+
+	def commit(self):
+		cfile = open(self.pkl, 'w+')	
+		pickle.dump(self._catalog, cfile)
+		cfile.close()
 
 
 class WaveForm:
@@ -184,17 +201,20 @@ class WaveForm:
 	- detect_broken_frame: detect broken frame
 
 	'''
-	def __init__(self, Au, wdata=None):
-		self._parent   = Au 
-		self.data      = wdata
-		self.framerate = Au.framerate
-		self.dpath     = Au.dpath
+	def __init__(self, STO):
+		self._parent   = STO 
+		self.data      = 0
+		self.framerate = STO.framerate
+		self.dpath     = STO.dpath
 
+
+	###################################################
+	###################################################
+	
 	def write(self,data):
 		self.data = data
-		
-	###################################################
-	###################################################
+
+
 	def hear(self):
 		filename = self._parent.filename
 		cache = []
@@ -213,10 +233,8 @@ class WaveForm:
 		#Update catalog
 		self._parent._catalog.update({index:filename})
 
-		cfile = open(self._parent.pkl, 'w+')	
-		pickle.dump(self._parent._catalog, cfile)
-		cfile.close()
-		print "Hear Done!"
+		return 1
+
 
 	def _mono(self,channel):
 		'''
@@ -224,7 +242,7 @@ class WaveForm:
 		mono recognition
 
 		'''
-		MaxID = len(self._parent._catalog)
+		MaxID = len(self._parent._catalog)-1
 		#audio recognition
 		match_index, accuracy, avgdb, location = recognize(MaxID,self.data[channel],self.framerate,channel,self.dpath)
 		if match_index is None:
@@ -251,7 +269,7 @@ class WaveForm:
 			print "This is a mono stream. it can't stereo."
 			return
 
-		MaxID = len(self._parent._catalog)
+		MaxID = len(self._parent._catalog)-1
 		#1> Analyze the chann0 first. 
 		MatchID_L, accuracy_L, avgdb_L, location_L= recognize(MaxID,self.data[chann0],self.framerate,chann0,self.dpath,Fast=None)
 		
@@ -259,7 +277,7 @@ class WaveForm:
 		if FastSearch is True:
 			FastSwitch = MatchID_L
 			#if accuracy is high enough, directly return
-			if accuracy_L>0.7:
+			if accuracy_L >= 0.7:
 				return self._parent._catalog[MatchID_L], accuracy_L, avgdb_L, location_L
 		else:
 			FastSwitch = None
@@ -267,6 +285,7 @@ class WaveForm:
 		#2> Analyze the chann1. 'Fast'means Fast recognition.
 		MatchID_R, accuracy_R, avgdb_R, location_R = recognize(MaxID,self.data[chann1],self.framerate,chann1,self.dpath,Fast=FastSwitch)
 
+		# print accuracy_L,accuracy_R
 		#handle the result from chann0 and chann1.
 		accuracy   = round((accuracy_L+accuracy_R)/2,3)
 		average_db = round((avgdb_L+avgdb_R)/2,3)

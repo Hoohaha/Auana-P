@@ -29,7 +29,7 @@ for parent, dirnames, filenames in os.walk(sample_path):
 
 			start = time.time()
 
-			print ("-----------------\nILE: << %s >>\n  IN PROCESSING....")%(filename)
+			print ("-----------------\nFILE: << %s >>\n  IN PROCESSING....")%(filename)
 
 			if storage.query(filename) is False:
 				storage.openf(filepath).hear()
@@ -38,6 +38,11 @@ for parent, dirnames, filenames in os.walk(sample_path):
 			
 			print "time cost %f \n"%(end-start)
 			print " "
-e=time.time()
+
+storage.commit()
+
+e = time.time()
+
 storage.items()
+
 print "total time %f'%f"%((e-s)/60,(e-s)%60)

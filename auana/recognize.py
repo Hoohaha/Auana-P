@@ -3,32 +3,40 @@ import os,time
 import numpy as np
 from ctypes import *
 import cPickle as pickle
+
+__DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+
 #############################################################################
 #Match info struct Definition
 class MATCH_INFO(Structure):
     _fields_ = [("accuracy", c_float),
                 ("position", c_int)]
 
+class COMPARE_PARAMETERS(Structure):
+	_fields_ = [("window_size", c_short),
+				("offset"     , c_short),
+				("threshold"  , c_short),
+				("num_win"    , c_short)]
+
 #Load the "compare" function from compare.so
-__DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 ham = cdll.LoadLibrary(__DIR+"/Compare.so")
+
 ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
-						   np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
-						   c_int,
-						   c_int,
-						   c_int,
-						   c_short,
-						   c_int,]
+						np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
+						c_int,
+						c_int,
+						COMPARE_PARAMETERS]
+
 ham.Compare.restype = MATCH_INFO
 
 ###########################################################################
 #Global Parameters
 #How many data in fft process, this value must be 2^n. 
 DEF_FFT_SIZE = 4096
-#Overlap frmate depth 
+#Overlap frame depth 
 DEF_OVERLAP = 2
 #Fingerprint bit depth
-FIN_BIT = 32
+FIN_BIT = 30
 #Max frequency
 MAX_FQ = 4000.0
 #Mel frequency
@@ -111,17 +119,27 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	match_position = 0
 	tlen           = tdata.shape[-1]
 
-	#according the data length, 
-	#give different window size and offset to make the search faster.
-	if tlen < 90:
-		window_size, offset = 6,   1
-	elif 90 <= tlen <= 900:
-		window_size, offset = 16,  1
-	else:
-		window_size, offset = 100, 3
 
-	num_win = tlen/window_size
-	# candidate = find(tdata[:100])
+	#Adaptive paratemers config:
+	#window_size: How many fingerpritns in a window.
+	#offset     : window move offset
+	#fault_tolerant: How many fault in a 32bit fingerprints 
+	if tlen < 90:
+	 	window_size, offset, fault_tolerant = 4,   1,  10
+	elif 90 <= tlen <= 900:
+		window_size, offset, fault_tolerant = 16,  16,  10
+	else:
+		window_size, offset, fault_tolerant = 100, 3,  6
+
+
+	compare_config = COMPARE_PARAMETERS()
+
+	compare_config.window_size = window_size
+	compare_config.offset      = offset
+	compare_config.threshold   = (int)(window_size*fault_tolerant)
+	compare_config.num_win     = tlen/window_size
+	
+
 
 	def get_reference_data(index):
 		'''
@@ -139,12 +157,12 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 		sdata = np.fromfile(datapath + "/" +str(index)+".bin",dtype=np.uint32)
 		sdata.shape = 2,-1
 		slen = sdata.shape[-1]
-		return sdata[channel],slen
+		return sdata[channel], slen
 
 	#search
 	if Fast is not None:
 		sdata,slen = get_reference_data(Fast)
-		accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
+		accuracy,position = compare(sdata, tdata, tlen, slen, compare_config)
 		if accuracy > 0.1:
 			match_index = Fast
 			max_accuracy = accuracy
@@ -152,7 +170,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	else:
 		for index in xrange(MaxID):
 			sdata,slen = get_reference_data(index)
-			accuracy,position = compare(sdata,tdata,tlen,slen,window_size,offset,num_win)
+			accuracy,position = compare(sdata, tdata, tlen, slen, compare_config)
 			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
 				match_index  = index
@@ -173,7 +191,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 #######################################################
 #    search function                                                                                                    
 #######################################################
-def compare(sdata,tdata,tlen,slen,window_size,offset,num_win):
+def compare(sdata,tdata,tlen,slen, compare_config):
 	'''
 	Find the similar audio with target data.
 
@@ -202,53 +220,10 @@ def compare(sdata,tdata,tlen,slen,window_size,offset,num_win):
 		2) if confidence is too low when we have finished the majority search, directly 
 		exit and search next file.
 	'''
-	r = ham.Compare(tdata,sdata,tlen,slen,window_size,offset,num_win)
+	r = ham.Compare(tdata, sdata, tlen, slen, compare_config)
 	return r.accuracy, r.position
 	
-	#Old version Python
-	#***********************************************************#
-	#***********************************************************#
-	min_seq         = 0
-	min_seq0        = 0
-	confidence      = 0
-	next_begain     = 0
-	max_index       = sdata.shape[-1]-window_size
-	stop_condition  = 15
-	threshold       = window_size*FIN_BIT*0.3
 
-	#Arithmetic sequence tolerance uplimit and down limit
-	up_limit = window_size+2
-	dw_limit = window_size-2
-
-	for a in  xrange(0,tlen/window_size):#target file
-
-		tsta     = a*window_size
-		tend     = (a+1)*window_size
-		dismin   = 300
-		min_seq0 = min_seq
-
-		for index in  xrange(next_begain, max_index,offset):#reference file
-			#calculate the distant of each subfingerprint between two songs
-			D = tdata[tsta : tend] ^ sdata[index : index+window_size]
-			#get distant of two search-windows
-			dis = np.sum(np.array([hamming_weight(long(d)) for d in D]))
-			# dis = ham.distance(tdata[tsta : tend],sdata[index : index+window_size],window_size)
-			if dis <= dismin :
-				dismin  = dis
-				min_seq = index
-				if window_size >10 and dismin <= 70:break
-
-		#filter:block distance is very close, and they are Arithmetic sequence
-		if dismin<threshold and dw_limit<=min_seq-min_seq0<=up_limit:
-			confidence += 1
-			next_begain = min_seq
-		#filter:if search done,stop
-		if next_begain >= max_index:break
-		#filter:if confidence is too low,stop
-		if a>stop_condition and confidence<2:return 0
-	if (confidence <= 1):
-		return 0
-	return round(float(confidence)/(tlen/window_size-1), 3)
 
 
 ###########################################################
@@ -292,7 +267,7 @@ def get_fingerprint(wdata,framerate,db=True):
 	s = 0
 	e = DEF_FFT_SIZE
 
-	while e<data_len:
+	while data_len > e:
 		#1)generate a frame and get it`s fingerprint (s:e)
 		#2)hanning window to smooth the edge
 		xs = np.multiply(wdata[s:e], hanning)
@@ -304,29 +279,34 @@ def get_fingerprint(wdata,framerate,db=True):
 		s = s + DEF_FFT_SIZE/DEF_OVERLAP
 		e = s + DEF_FFT_SIZE
 
+
 		subfin = 0L
 
-		for n in xrange(2,FIN_BIT):
+		for n in xrange(0,FIN_BIT):
 			#BandTable look-up
 			#use a BandTable to improve the speed of computation
 			b0 = BandTable[n][0]
 			b1 = BandTable[n][1]
 
 			max_fp = 0
-			max_b = 0
+			max_b  = 0
 
 			for b in xrange(b0,b1):
+				if (xfp[b] <= 50):
+					continue
 				#Compute the max frequency value
-				if (xfp[b] > max_fp): 
+				if (xfp[b] > max_fp):
 					max_fp = xfp[b]
-					max_b = b
+					max_b  = b
+
 			#generate the fingerprint
 			if max_b - (b0+b1)/2 >= 0:
-				subfin |= 1<<(n-2)
+				subfin |= 1<<n
 
 		fin.append(subfin)
 
 	fin = np.array(fin,dtype = np.uint32)
+
 	if db is True:
 		return fin,0
 

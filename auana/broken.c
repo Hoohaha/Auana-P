@@ -33,8 +33,7 @@ int broken_frame(int16_t *pBuffer, uint32_t length, float *resBuffer, int framer
     float timeplace=0;
     bool flag = false;
     uint16_t size = length/DETECT_WIN;
-    char chn;
-    for(chn=0;chn<2;chn)
+
     for(index=1; index<= size; index++)
     {
         /*Caculate the average value*/
