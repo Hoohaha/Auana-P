@@ -11,14 +11,14 @@ sampling_rate = 8000.0
 # 阻带为<0.1*4000, >0.6*4000
 # 通带增益的最大衰减值为2dB
 # 阻带的最小衰减值为40dB
-b, a = signal.iirdesign([0.2, 0.5], [0.1, 0.6], 2, 40)
+b, a = signal.iirdesign([0.043, 0.048],[0.043, 0.048], 1, 100)
 
 # 使用freq计算滤波器的频率响应
 w, h = signal.freqz(b, a)
 
 # 计算增益
 power = 20*np.log10(np.clip(np.abs(h), 1e-8, 1e100))
-
+print power
 # 绘制增益
 pl.subplot(211)
 pl.plot(w/np.pi*sampling_rate/2, power)

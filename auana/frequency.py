@@ -5,7 +5,7 @@ import math
 
 DEF_FFT_SIZE = 4096
 
-def compute_thd(wdata,framerate):
+def compute_thd(wdata,framerate,f=1000):
 	#data length
 	data_len = wdata.shape[-1]
 
@@ -18,47 +18,64 @@ def compute_thd(wdata,framerate):
 
 	max_freq = int(20000/scale)
 
-	db_avg = 0
+	thd = 0
 
-	max_har_num = 11
+	count = 0
 
-	th = 0
+	zcr_last = 0
 
-	for n in xrange(num-1,num):
+	flag = False
+
+	f_upper = int((f+50)/scale)
+	f_lower = int((f-50)/scale)
+
+	############################IIR#############################
+	# b, a = signal.iirdesign([0.043, 0.048],[0.043, 0.048], 1, 100)
+
+	# w, h = signal.freqz(b, a)
+
+	for n in xrange(num):
+
+		frame = wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE]
+
+		zcr = compute_zcr(frame)
+
+		if abs(zcr_last - zcr) <=3 and zcr > 60:
+			flag = True
+
+		zcr_last = zcr
+
+		if flag is False:
+			continue
+
+		count += 1
+
 		#2)hanning window to smooth the edge
-		xs = np.multiply(wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE], hanning)
+		xs = np.multiply(frame, hanning)
 
 		#fft transfer
-		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_freq]))
+		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_freq]))#
 
-		base_freq = xfp[int(1000/scale)]
+		fundamental_scope = xfp[f_lower:f_upper]
 
-		if base_freq >= 120:
-			base_freq = 0
+		fundamental_freq  = fundamental_scope.max()
 
-		base_freq = 10**(base_freq/20)
+		fundamental_freq  = 10**(fundamental_freq/20)
 
-		sum_har   = 0.0
+		xfp[f_lower:f_upper] = 0
 
-		for har_n in xrange(2, max_har_num):
+		v = xfp.max()
 
-			index = int(1000*har_n / scale)
-			value = int(xfp[index])
+		value = 10**(v/20)
 
-			if value >= 120:
-				value = 120
-			value = value - 120
+		thd += value/fundamental_freq
 
-			value = 10**(value/20)
+		if count > 6:
+			thd = thd/count
+			return thd*100
 
-			value = value**2
-			sum_har += value
-
-		sum_har = math.sqrt(sum_har)
-		
-		th = sum_har/base_freq
-
-	return th*100
+	if thd == 0:
+		return 100
 
 
 
@@ -69,17 +86,20 @@ def compute_volume(wdata,framerate):
 	#hanning window
 	hanning = hann(DEF_FFT_SIZE, sym=0)
 
-	num = data_len/DEF_FFT_SIZE
+	fft_size = DEF_FFT_SIZE
 
-	scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+	num = data_len/fft_size
 
-	max_fre = int(3000/scale)
+
+	scale = (framerate/2.0)/(fft_size/2+1.0)
+
+	max_fre = int(3000.0/scale)
 
 	db_avg = 0
 
 	for n in xrange(num):
 		#2)hanning window to smooth the edge
-		xs = np.multiply(wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE], hanning)
+		xs = np.multiply(wdata[n*fft_size: (n+1)*fft_size], hanning)
 
 		#fft transfer
 		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_fre]))
@@ -91,3 +111,24 @@ def compute_volume(wdata,framerate):
 	db_avg = round(db_avg/n,2)
 
 	return db_avg
+
+
+
+
+def compute_zcr(frame):
+	z = 0
+	if frame[0]>0:
+		x_last=1
+	else:
+		x_last=-1
+
+	for x in frame:
+		if x>0:
+			x_now = 1
+		else:
+			x_now = -1
+
+		z += abs(x_now - x_last)
+		x_last = x_now
+
+	return z
