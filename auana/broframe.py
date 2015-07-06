@@ -58,7 +58,7 @@ def detect_broken_frame(wdata,framerate):
 
 	FLAG = 0
 	DETECT_WIN = 256
-	VAR_THRESHOLD = 1000
+	VAR_THRESHOLD = 2000
 	bf = []
 	var0 = var1 = 0
 	for i in  xrange(len(wdata)/DETECT_WIN):
