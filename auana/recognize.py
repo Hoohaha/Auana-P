@@ -1,8 +1,9 @@
 #Author: Halye Guo  Date:2014/12
-import os,time
+import os
 import numpy as np
 from ctypes import *
-import cPickle as pickle
+from common import hann
+
 
 __DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
@@ -237,7 +238,7 @@ def get_fingerprint(wdata,framerate):
 	data_len = wdata.shape[-1]
 
 	#hanning window
-	hanning = _hann(DEF_FFT_SIZE, sym=0)
+	hanning = hann(DEF_FFT_SIZE, sym=0)
 
 	#divide the frequency sub-band
 	if framerate == 44100:
@@ -311,95 +312,31 @@ def get_fingerprint(wdata,framerate):
 
 
 
-def compute_volume(wdata,framerate):
-	#data length
-	data_len = wdata.shape[-1]
 
-	#hanning window
-	hanning = _hann(DEF_FFT_SIZE, sym=0)
+# def find(data):
+# 	s = time.time()
+# 	cfile = open(os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data" + "/IndexTable.pkl", 'r')	
+# 	itable = pickle.load(cfile)
+# 	cfile.close()
+# 	res = {}
 
-	num = data_len/DEF_FFT_SIZE
+# 	for d in data:
+# 		d = (d & 0xFFFF0000) >> 16
+# 		indexs = itable[d]
+# 		if len(indexs) != 0:
+# 			for item in indexs:
+# 				if item not in res:
+# 					res[item] = 0
+# 				else:
+# 					res[item] += 1
 
-	scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+# 	length = len(data)/2
 
-	max_fre = int(3000/scale)
+# 	te = sorted(res.iteritems(),key=lambda d:d[1],reverse=True)
 
-	db_avg = 0
-
-	for n in xrange(num):
-		#2)hanning window to smooth the edge
-		xs = np.multiply(wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE], hanning)
-
-		#fft transfer
-		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_fre]))
-
-		db_one_frame = xfp.mean()
-
-		db_avg += db_one_frame
-
-	db_avg = round(db_avg/n,2)
-
-	return db_avg
-
-
-
-
-
-def _hann(M, sym=True):
-	'''
-	hanning window.
-	'''
-	# Docstring adapted from NumPy's hanning function
-	if M < 1:
-		return np.array([])
-	if M == 1:
-		return np.ones(1, 'd')
-	odd = M % 2
-	if not sym and not odd:
-		M = M + 1
-		n = np.arange(0, M)
-		w = 0.5 - 0.5 * np.cos(2.0 * np.pi * n / (M - 1))
-	if not sym and not odd:
-		w = w[:-1]
-	return w
-
-def hamming_weight(x):
-	m1  = 0x55555555 #binary: 0101...  
-	m2  = 0x33333333 #binary: 00110011..  
-	m4  = 0x0f0f0f0f #binary:  4 zeros,  4 ones ...  
-
-	x -= (x >> 1) & m1             #put count of each 2 bits into those 2 bits  
-	x = (x & m2) + ((x >> 2) & m2) #put count of each 4 bits into those 4 bits   
-	x = (x + (x >> 4)) & m4        #put count of each 8 bits into those 8 bits   
-	x += x >>  8                   #put count of each 16 bits into their lowest 8 bits  
-	x += x >> 16                   #put count of each 32 bits into their lowest 8 bits  
-	x += x >> 32                   #put count of each 64 bits into their lowest 8 bits  
-	return x & 0x7f
-
-def find(data):
-	s = time.time()
-	cfile = open(os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data" + "/IndexTable.pkl", 'r')	
-	itable = pickle.load(cfile)
-	cfile.close()
-	res = {}
-
-	for d in data:
-		d = (d & 0xFFFF0000) >> 16
-		indexs = itable[d]
-		if len(indexs) != 0:
-			for item in indexs:
-				if item not in res:
-					res[item] = 0
-				else:
-					res[item] += 1
-
-	length = len(data)/2
-
-	te = sorted(res.iteritems(),key=lambda d:d[1],reverse=True)
-
-	r = []
-	for t in te:
-		if t[1] > length:
-			r.append(t[0])
-	print "index-time %.3f"%(time.time()-s)
-	return r
+# 	r = []
+# 	for t in te:
+# 		if t[1] > length:
+# 			r.append(t[0])
+# 	print "index-time %.3f"%(time.time()-s)
+# 	return r

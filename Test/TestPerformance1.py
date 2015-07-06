@@ -3,7 +3,7 @@ __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 sys.path.append(os.path.dirname(__PATH__))
 from auana import *
 # search .wav file
-dir_audio0 = "E:/sample"
+dir_audio0 = "E:/iar/Debug"
 
 st  = Storage()
 

@@ -6,17 +6,18 @@ except ValueError:
 	pass
 
 s = Storage()
-s.items()
+# s.items()
 framerate = s.get_framerate()
 
 print framerate
 
-wf = s.openf("E:/FFOutput/Jason Wade-Shrek-You Belong To Me-128.wav")
+wf = s.openf("E:/Auana-P/2-sample.wav")
 
-wf.hear()
+# wf.hear()
 
 # print wf.recognize()
-print wf.recognize(Fast=False)
-print wf.recognize(Mono=True,Ch=0)
-print wf.detect_broken_frame()
+# print wf.recognize(Fast=False)
+# print wf.recognize(Mono=True,Ch=0)
+# print wf.detect_broken_frame()
 print wf.get_volume()
+print wf.get_THD()

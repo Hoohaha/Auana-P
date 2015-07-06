@@ -1,7 +1,8 @@
 import wave, os
 import cPickle as pickle
-from auana.recognize import recognize,get_fingerprint,compute_volume
+from auana.recognize import recognize,get_fingerprint
 from auana.broframe import detect_broken_frame
+from auana.frequency import compute_volume, compute_thd
 try:
 	import numpy as np
 except ImportError:
@@ -323,6 +324,9 @@ class WaveForm:
 	def get_volume(self, Ch=0):
 		return compute_volume(self.data[Ch], self.framerate)
 
+	def get_THD(self, Ch=0):
+		return compute_thd(self.data[Ch],self.framerate)
+
 
 
 
@@ -333,10 +337,6 @@ def _load__catalog(path):
 	catalog = pickle.load(cfile)
 	cfile.close()
 	return catalog
-
-
-
-
 
 def _wave_get_data(f):
 	"""Private method."""
@@ -354,32 +354,37 @@ def _wave_get_data(f):
 
 	return data, framerate, nchannels
 
-def fill_index(data,index):
 
-	table_path = __PATH__+"/data" + "/IndexTable.pkl"
 
-	itable = load_data(table_path)
 
-	for d in data[0]:
-		d = (d & 0xFFFF0000) >> 16
-		if index not in itable[d] and d!= 0:
-			itable[d].append(index)
+# def fill_index(data,index):
 
-	f = open(table_path,"w")
-	pickle.dump(itable,f)
-	f.close()
+# 	table_path = __PATH__+"/data" + "/IndexTable.pkl"
 
-def load_data(p):
-	try:
-		cfile = open(p, 'rb')
-		c = pickle.load(cfile)
-	except EOFError:
-		c = {}
-	except IOError:
-		c = {}
-	if len(c) == 0:
-		cfile = open(p, 'w+')
-		for n in xrange(65537):
-			c[n] = []
-	cfile.close()
-	return c
+# 	itable = load_data(table_path)
+
+# 	for d in data[0]:
+# 		d = (d & 0xFFFF0000) >> 16
+# 		if index not in itable[d] and d!= 0:
+# 			itable[d].append(index)
+
+# 	f = open(table_path,"w")
+# 	pickle.dump(itable,f)
+# 	f.close()
+
+
+
+# def load_data(p):
+# 	try:
+# 		cfile = open(p, 'rb')
+# 		c = pickle.load(cfile)
+# 	except EOFError:
+# 		c = {}
+# 	except IOError:
+# 		c = {}
+# 	if len(c) == 0:
+# 		cfile = open(p, 'w+')
+# 		for n in xrange(65537):
+# 			c[n] = []
+# 	cfile.close()
+# 	return c
