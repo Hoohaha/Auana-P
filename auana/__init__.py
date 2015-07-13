@@ -1,12 +1,17 @@
 import wave, os
-import cPickle as pickle
-from auana.recognize import recognize,get_fingerprint
-from auana.broframe import detect_broken_frame
+from auana.broframe  import detect_broken_frame
+from auana.recognize import recognize, get_fingerprint
 from auana.frequency import compute_volume, compute_thd
+
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
+
 try:
 	import numpy as np
 except ImportError:
-	print("Please build and install the numpy Python ")
+	print("Import error: Please build and install the numpy Python!")
 
 __PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
@@ -25,7 +30,7 @@ Detect_broken_frame
 ===========
 
 
-Load_file
+Open
 ===========
 
 
@@ -93,7 +98,7 @@ def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 	except IOError:
 		_create_pkl()
 
-	print "Create Seccussfully!"
+	print ("Create Seccussfully!")
 
 
 
@@ -108,11 +113,16 @@ def Detect_broken_frame(dl,dr,framerate):
 
 
 
-def Load_file(f):
+def Open(f):
+	filename = os.path.basename(f)
+
 	if os.path.splitext(os.path.basename(f))[1] == '.wav':
-		return _wave_get_data(f)
+		data, framerate, nchannels = _wave_get_data(f)
 	else:
 		raise IOError("Not support yet!")
+
+	return WaveForm(framerate=framerate, data=data, filename=filename, channels=nchannels)
+	
 
 
 
@@ -150,17 +160,15 @@ class Storage:
 			raise Warning("The \'AudioFingerCatalog.pkl\' is empty, please crate a new.")
 
 
-	def openf(self, file):
-		self.filename = os.path.basename(file)
-		data, framerate, nchannels = Load_file(file)
+	def Open(self, file):
+		filename = os.path.basename(f)
+		data, framerate, nchannels = _wave_get_data(f)(file)
 
 		if framerate != self.framerate:
 			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
-		
-		w = WaveForm(self)
-		w.data = data
 
-		return w
+		return WaveForm(framerate=framerate, data=data, storage=self, filename=filename, channels=nchannels)
+		
 
 	
 	def query(self,filename):
@@ -175,7 +183,7 @@ class Storage:
 	def clean_up(self):
 		cfile = open(self.pkl, 'w+')
 		cfile.close()
-		print "Already Clean Done!"
+		print ("Already Clean Done!")
 
 	def forget(self,filename):
 		self._catalog.pop(filename)
@@ -183,12 +191,12 @@ class Storage:
 	def items(self):
 		#sort dict, te is a tuple 
 		te = sorted(self._catalog.iteritems(),key=lambda d:d[0],reverse=False)
-		print "******* File List *******"
-		print "Total:%d\n"%len(self._catalog)
-		print " No.","    ","File Name"
+		print ("******* File List *******")
+		print ("Total:%d\n"%len(self._catalog))
+		print (" No.","    ","File Name")
 		for item in te:
-			print "  %3s       %s"%(item[0],item[1])
-		print "***********************"
+			print ("  %3s       %s"%(item[0],item[1]))
+
 
 	def commit(self):
 		cfile = open(self.pkl, 'w+')	
@@ -212,11 +220,16 @@ class WaveForm:
 	- detect_broken_frame: detect broken frame
 
 	'''
-	def __init__(self, STO):
-		self._parent   = STO 
-		self.data      = 0
-		self.framerate = STO.framerate
-		self.dpath     = STO.dpath
+	def __init__(self, framerate, data, storage=None, filename=None, channels=2):
+
+		if storage is not None:
+			self._parent   = storage
+			self.dpath     = storage.dpath
+
+		self.framerate = framerate
+		self.data      = data
+		self.filename  = filename
+		self.channels  = channels
 
 
 	###################################################
@@ -227,7 +240,7 @@ class WaveForm:
 
 
 	def hear(self):
-		filename = self._parent.filename
+		filename = self.filename
 		cache = []
 		cache.append(get_fingerprint(wdata=self.data[0],framerate=self.framerate))
 		cache.append(get_fingerprint(wdata=self.data[1],framerate=self.framerate))#Compute charatics
@@ -260,6 +273,7 @@ class WaveForm:
 			return None
 		return self._parent._catalog[match_index],accuracy, location
 
+
 	def _stereo(self,FastSearch):
 		'''
 		Private method.
@@ -276,6 +290,7 @@ class WaveForm:
 		'''
 		chann0 = 0
 		chann1 = 1
+
 		if self.data.shape[0] != 2:
 			raise ValueError("This is a mono stream. it can't stereo.")
 
@@ -333,9 +348,9 @@ class WaveForm:
 ##################################################################################################
 def _load__catalog(path):
 	"""Private method."""
-	cfile   = open(path, 'rb')
-	catalog = pickle.load(cfile)
-	cfile.close()
+	pklf    = open(path, 'rb')
+	catalog = pickle.load(pklf)
+	pklf.close()
 	return catalog
 
 def _wave_get_data(f):

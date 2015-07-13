@@ -1,5 +1,5 @@
 import numpy as np
-from common import hann
+from auana.common import hann
 import math
 
 

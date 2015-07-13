@@ -5,7 +5,7 @@ import numpy as np
 
 from auana import Storage, WaveForm
 
-print "Title: Mic Recognition Demo"
+print ("Title: Mic Recognition Demo")
 
 pa      = PyAudio()
 storage = Storage()
@@ -17,7 +17,7 @@ chunk = 1024
 channels = 2
 format = paInt16
 
-print "Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16)
+print ("Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16))
 
 
 
@@ -25,6 +25,7 @@ Time = 5
 NUM = int((samplerate*Time)/float(chunk))
 
 save_buffer = []
+
 #open audio stream    
 stream = pa.open(
             format   = format, 
@@ -35,7 +36,7 @@ stream = pa.open(
             )
 while ("" == raw_input("Press \'Enter\' to start.")):
     N = NUM
-    print "  Listening..."
+    print ("  Listening...")
     # wave_data = []
     while N:
         save_buffer.append(stream.read(chunk))
@@ -52,12 +53,11 @@ while ("" == raw_input("Press \'Enter\' to start.")):
     end = time.time() - start
 
     if name is not None:
-        print "  Now Playing is: %s Accuracy: %.2f Position: %d'%d "%(name.split(".")[0],confidence,position/60,position%60)
+        print ("  Now Playing is: %s Accuracy: %.2f Position: %d'%d "%(name.split(".")[0],confidence,position/60,position%60))
     else:
-        print "  Not Found!"
-    print "-------------------------------------"
-    print "                    Time Cost: %.3f"%end
-    print " \n"
+        print ("  Not Found!")
+    print ("-------------------------------------\n                    Time Cost: %.3f \n"%end)
+
     save_buffer = []
 
 #stop stream

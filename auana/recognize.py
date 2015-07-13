@@ -2,23 +2,27 @@
 import os
 import numpy as np
 from ctypes import *
-from common import hann
-
+from auana.common import hann
 
 __DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 #############################################################################
-#Match info struct Definition
+#Structure Definition:
+#1>
+#Match Info Structure Definition
 class MATCH_INFO(Structure):
-    _fields_ = [("accuracy", c_float),
-                ("position", c_int)]
+    _fields_ = [("accuracy",  c_float),
+                ("position",  c_int)]
 
+#2>
+#Compare Parameters Structure Definition
 class COMPARE_PARAMETERS(Structure):
 	_fields_ = [("window_size", c_short),
 				("offset"     , c_short),
 				("threshold"  , c_short),
 				("num_win"    , c_short)]
 
+############################################################################
 #Load the "compare" function from compare.so
 ham = cdll.LoadLibrary(__DIR+"/Compare.so")
 
@@ -32,16 +36,19 @@ ham.Compare.restype = MATCH_INFO
 
 ###########################################################################
 #Global Parameters
-#How many data in fft process, this value must be 2^n. 
+#Default FFT Size: How many data in FFT process, this value must be 2^n. 
 DEF_FFT_SIZE = 4096
-#Overlap frame depth 
+#Default Overlap Frame Depth 
 DEF_OVERLAP = 2
-#Fingerprint bit depth
-FIN_BIT = 30
-#Max frequency
-MAX_FQ = 4000.0
-#Mel frequency
-MEL = (2596*np.log10(1+MAX_FQ/700.0))/(FIN_BIT+1.0)
+#Default Fingerprint Bit Depth
+DEF_FIN_BIT = 30
+#Default Max frequency
+DEF_MAX_FRQ = 4000.0
+
+###########################################################################
+#Max Mel Frequency
+MEL = (2596*np.log10(1+DEF_MAX_FRQ/700.0))/(DEF_FIN_BIT+1.0)
+
 #The upper and lower bounds of sub-band. when framerate is 44100
 BandTable_1 = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22], 
 			   [17 ,  27], [22 ,  32], [27 ,  38], [32 ,  44], 
@@ -52,7 +59,7 @@ BandTable_1 = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22],
 			   [195, 226], [210, 244], [226, 262], [244, 282], 
 			   [262, 302], [282, 324], [302, 347], [324, 372]]
 
-BandTable_2 = [[0 ,  16], [8  ,  25], [16 ,  34], [25 ,  44], 
+BandTable_2 = [[0 ,   16], [8  ,  25], [16 ,  34], [25 ,  44], 
 			   [34 ,  54], [44 ,  65], [54 ,  76], [65 ,  89], 
 			   [76 , 102], [89 , 115], [102, 130], [115, 145],
 			   [130, 162], [145, 179], [162, 197], [179, 217], 
@@ -60,6 +67,7 @@ BandTable_2 = [[0 ,  16], [8  ,  25], [16 ,  34], [25 ,  44],
 			   [282, 333], [307, 360], [333, 390], [360, 420], 
 			   [390, 453], [420, 488], [453, 524], [488, 563], 
 			   [524, 605], [563, 648], [605, 694], [648, 743]]
+
 
 def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	'''
@@ -74,13 +82,12 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 
 	Parameters
     ----------
-	wdata: wave data                                Type:[array]
-	sdata: source data(reference data)				Type:[list]
-	framerate: sample rate							Type:[int]
-	channel: wave channel                           Type:[int]
-	Fast: Faster recognize(defualt value is None)   Type:[int]
-	return_cha: wheather return the charatics
-				which has beeb computed             Type:[array]
+    MaxID: Max ID                                   Type:[int]
+	wdata: Wave data stream                         Type:[array]
+	framerate: Frame rate							Type:[int]
+	channel: Wave channel                           Type:[int]
+	datapath: Where the data was saved				Type:[string]
+	Fast: Faster recognize(default:None)   			Type:[int]
 
 	Returns
     ----------
@@ -95,23 +102,23 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	1.bin							Index:1, data
 	...                        		...
 
-	AudioFingerCatalog.pkl
-	   	{
-		0:'sample0.wav',
-	   	1:'sample1.wav',
-	   			...
-	   	indexN:'samplen.wav',
-	   	}
+		AudioFingerCatalog.pkl
+		   	{
+				0: 'sample0.wav',
+				1: 'sample1.wav',
+				...
+				MaxID:'samplen.wav',
+		   	}
 
-	"1.bin" format 
-	   {channel0:data,channel1:data}
+		"1.bin" format 
+		   {channel0:data,channel1:data}
 
-	Process
+	Steps
 	----------
-	step1: get the fingerprint of wave data
+	step1: get the fingerprint of PCM stream
 	step2: compare the target fingerprint with the sdata, 
 		   and return the accuarcy and matched audio index.
-		   accuarcy: 0~1, it means the how many fingerprint matched in reference file.
+		   accuarcy: 0~1, it means the how percentage fingerprint matched in reference file.
 	'''
 
 	tdata          = get_fingerprint(wdata,framerate)
@@ -121,10 +128,11 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	tlen           = tdata.shape[-1]
 
 
-	#Adaptive paratemers config:
-	#window_size: How many fingerpritns in a window.
+	#Adaptive parameters configure:
+	#window_size: How many fingerprints in a window.
 	#offset     : window move offset
-	#fault_tolerant: How many fault in a 32bit fingerprints 
+	#fault_tolerant: How many fault bits in a 32-bit fingerprints
+
 	if tlen < 90:
 	 	window_size, offset, fault_tolerant = 4,   1,  10
 	elif 90 <= tlen <= 900:
@@ -144,7 +152,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 
 	def get_reference_data(index):
 		'''
-		This function load data acorrding the index.
+		This function load data by the index.
 
 		Parameters
 		----------
@@ -202,24 +210,22 @@ def compare(sdata,tdata,tlen,slen, compare_config):
 	tdata: target data from target wav file.    Type:[array]
 	tlen: the length of tdata                   Type:[int]
 	slen: the length of sdata                   Type:[int]
-	window_size: search window size             Type:[int]
-	offset: window_size move offset on sdata    Type:[short]
-	num_win: how many windows in tdata          Type:[int]
+	compare_config: configuration               Type:[COMPARE_PARAMETERS]
 
 	Returns
     ----------
-    r.accuracy: 0~100%                          Type:[float]
-    r.position: index of sdata                  Type:[int]
+    r: compare result                           Type:[MATCH_INFO]
+		r.accuracy: 0~100%                          Type:[float]
+		r.position: index of sdata                  Type:[int]
 
 	-----------------------------------------
 	|-----win1------|-----win2-----|---------
 	-----------------------------------------
 
-	In oder to improve efficiency, there are several ways:
-		1) the section that have matched, we not search it in next window,
-			so we use the variable: next_begain 
-		2) if confidence is too low when we have finished the majority search, directly 
-		exit and search next file.
+	To improve efficiency, there are several method to be adopted:
+		1) The section that have matched, we don't search it in next time.
+		2) If accuracy is too low when we have finished the majority search, directly search next file.
+		3) Use ".so".
 	'''
 	r = ham.Compare(tdata, sdata, tlen, slen, compare_config)
 	return r.accuracy, r.position
@@ -252,18 +258,18 @@ def get_fingerprint(wdata,framerate):
 
 		TEM = MEL/2596.0
 		#compute the sub-band
-		for n in xrange(1,FIN_BIT+1):
+		for n in xrange(1,DEF_FIN_BIT+1):
 			b0 = int(round(700*(10**((n-1)*TEM)-1)/scale,0))
 			b1 = int(round(700*(10**((n+1)*TEM)-1)/scale,0))
 			BandTable.append((b0,b1))
 
-	Max_Band = BandTable[FIN_BIT-1][1]
+	Max_Band = BandTable[DEF_FIN_BIT-1][1]
 
 	#volume compute
 	sumdb = 0
 	num = 0
 
-	fin= []
+	fin_array= []
 	#init index of "wdata"
 	s = 0
 	e = DEF_FFT_SIZE
@@ -280,9 +286,9 @@ def get_fingerprint(wdata,framerate):
 		s = s + DEF_FFT_SIZE/DEF_OVERLAP
 		e = s + DEF_FFT_SIZE
 
-		subfin = 0L
+		subfin = 0
 
-		for n in xrange(0,FIN_BIT):
+		for n in xrange(0,DEF_FIN_BIT):
 			#BandTable look-up
 			#use a BandTable to improve the speed of computation
 			b0 = BandTable[n][0]
@@ -302,41 +308,8 @@ def get_fingerprint(wdata,framerate):
 			if max_b - (b0+b1)/2 >= 0:
 				subfin |= 1<<n
 
-		fin.append(subfin)
+		fin_array.append(subfin)
 
-	fin = np.array(fin,dtype = np.uint32)
+	fin_array = np.array(fin_array,dtype = np.uint32)
 
- 	return fin
-
-
-
-
-
-
-# def find(data):
-# 	s = time.time()
-# 	cfile = open(os.path.dirname(os.path.abspath(__file__)).replace('\\','/')+"/data" + "/IndexTable.pkl", 'r')	
-# 	itable = pickle.load(cfile)
-# 	cfile.close()
-# 	res = {}
-
-# 	for d in data:
-# 		d = (d & 0xFFFF0000) >> 16
-# 		indexs = itable[d]
-# 		if len(indexs) != 0:
-# 			for item in indexs:
-# 				if item not in res:
-# 					res[item] = 0
-# 				else:
-# 					res[item] += 1
-
-# 	length = len(data)/2
-
-# 	te = sorted(res.iteritems(),key=lambda d:d[1],reverse=True)
-
-# 	r = []
-# 	for t in te:
-# 		if t[1] > length:
-# 			r.append(t[0])
-# 	print "index-time %.3f"%(time.time()-s)
-# 	return r
+	return fin_array
