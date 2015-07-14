@@ -1,6 +1,6 @@
-import math
 import numpy as np
 from auana.common import hann
+import math
 
 
 DEF_FFT_SIZE = 4096

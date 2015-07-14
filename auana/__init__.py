@@ -1,6 +1,6 @@
 import wave, os
 from auana.broframe  import detect_broken_frame
-from auana.recognize import recognize, get_fingerprint, __PATH
+from auana.recognize import recognize, get_fingerprint
 from auana.frequency import compute_volume, compute_thd
 
 try:
@@ -13,6 +13,7 @@ try:
 except ImportError:
 	print("Import error: Please build and install the numpy Python!")
 
+__PATH__ = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
 
 
 """
@@ -59,17 +60,17 @@ WaveForm
 """
 
 
-# catalog file name
+#catalog file name
 CATALOG_FILE          = '/AudioFingerCatalog.pkl'
 
-# default catalog path: ../data/AudioFingerCatalog.pkl
-DEFAULT_DATA_PATH     = os.path.dirname(__PATH) + '/data'
+#default catalog path: ../data/AudioFingerCatalog.pkl
+DEFAULT_DATA_PATH     = os.path.dirname(__PATH__) + '/data'
 
-# default framerate
+#default framerate
 DEFAULT_FRAMERATE     = 22050
 
 
-# create a new place(Storage) to store data
+#create a new place to store data
 def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 	catalog = {}
 
@@ -79,7 +80,7 @@ def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 
 	def _create_pkl():
 		catalog["FRAMERATE"] = framerate
-		pklf = open(catalog_path, 'wb')
+		pklf = open(catalog_path, 'w+')
 		pickle.dump(catalog, pklf)
 		pklf.close()
 
@@ -96,11 +97,22 @@ def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 		_create_pkl()
 	except IOError:
 		_create_pkl()
+
 	print ("Create Seccussfully!")
 
 
 
-# open a waveform
+
+def Detect_broken_frame(dl,dr,framerate):
+	if dl is not None:
+		chann0 = detect_broken_frame(dl, framerate)
+	if dr is not None:
+		chann1 = detect_broken_frame(dr, framerate)
+	
+	return {"left":chann0, "right": chann1}
+
+
+
 def Open(f):
 	filename = os.path.basename(f)
 
@@ -110,9 +122,7 @@ def Open(f):
 		raise IOError("Not support yet!")
 
 	return WaveForm(framerate=framerate, data=data, filename=filename, channels=nchannels)
-
-
-
+	
 
 
 
@@ -131,7 +141,8 @@ class Storage:
 		-- items: show all items.
 
 	Use this class to open a data stream.
-		-- Open:  open a data stream and create a WaveForm object.
+		-- open:  open a data list and create a obejct Stream.
+		-- openf: open a file and create a obejct Stream
 
 	'''
 	def __init__(self, path = DEFAULT_DATA_PATH):
@@ -149,17 +160,15 @@ class Storage:
 			raise Warning("The \'AudioFingerCatalog.pkl\' is empty, please crate a new.")
 
 
-	def Open(self, file=None):
-		if file is not None:
-			filename = os.path.basename(file)
-			data, framerate, nchannels = _wave_get_data(file)
+	def Open(self, file):
+		filename = os.path.basename(f)
+		data, framerate, nchannels = _wave_get_data(f)(file)
 
-			if framerate != self.framerate:
-				raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
+		if framerate != self.framerate:
+			raise ValueError("%d is required, but the framerate is %d for this file."%(self.framerate,framerate))
 
-			return WaveForm(framerate=self.framerate, data=data, storage=self, filename=filename, channels=nchannels)
-		else:
-			return WaveForm(framerate=self.framerate, data=[], storage=self, channels=2)
+		return WaveForm(framerate=framerate, data=data, storage=self, filename=filename, channels=nchannels)
+		
 
 	
 	def query(self,filename):
@@ -190,7 +199,7 @@ class Storage:
 
 
 	def commit(self):
-		cfile = open(self.pkl, 'wb')
+		cfile = open(self.pkl, 'w+')	
 		pickle.dump(self._catalog, cfile)
 		cfile.close()
 
@@ -317,30 +326,20 @@ class WaveForm:
 
 
 
-	def recognize(self, ch=None, Fast=True):
-		if ch is None:
+	def recognize(self,Mono=False,Fast=True,Ch=0):
+		if Mono is True:
+			return self._mono(Ch)
+		else:
 			return self._stereo(Fast)
-		else:
-			return self._mono(ch)
 
 
-	def detect_broken_frame(self, ch=None):
-		channame = ["left","right"]
-		if ch is None:
-			res0 = detect_broken_frame(self.data[0], self.framerate)
-			res1 = detect_broken_frame(self.data[1], self.framerate)
-			return {"left": res0, "right": res1}
+	def detect_broken_frame(self):
+		return Detect_broken_frame(self.data[0],self.data[1],self.framerate)
 
-		elif ch==0 or ch==1:
-			res = detect_broken_frame(self.data[ch], self.framerate)
-			return {channame[ch]:res}
-		else:
-			raise ValueError("Index of channel is not support.")
-	
-	def get_volume(self, ch=0):
-		return compute_volume(self.data[ch], self.framerate)
+	def get_volume(self, Ch=0):
+		return compute_volume(self.data[Ch], self.framerate)
 
-	def get_THD(self, ch=0):
+	def get_THD(self, Ch=0):
 		return compute_thd(self.data[Ch],self.framerate)
 
 
@@ -353,8 +352,6 @@ def _load__catalog(path):
 	catalog = pickle.load(pklf)
 	pklf.close()
 	return catalog
-
-
 
 def _wave_get_data(f):
 	"""Private method."""
@@ -375,3 +372,34 @@ def _wave_get_data(f):
 
 
 
+# def fill_index(data,index):
+
+# 	table_path = __PATH__+"/data" + "/IndexTable.pkl"
+
+# 	itable = load_data(table_path)
+
+# 	for d in data[0]:
+# 		d = (d & 0xFFFF0000) >> 16
+# 		if index not in itable[d] and d!= 0:
+# 			itable[d].append(index)
+
+# 	f = open(table_path,"w")
+# 	pickle.dump(itable,f)
+# 	f.close()
+
+
+
+# def load_data(p):
+# 	try:
+# 		cfile = open(p, 'rb')
+# 		c = pickle.load(cfile)
+# 	except EOFError:
+# 		c = {}
+# 	except IOError:
+# 		c = {}
+# 	if len(c) == 0:
+# 		cfile = open(p, 'w+')
+# 		for n in xrange(65537):
+# 			c[n] = []
+# 	cfile.close()
+# 	return c
