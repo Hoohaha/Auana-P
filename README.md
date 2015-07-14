@@ -34,20 +34,28 @@ So for the automation of audio validation, it may be a good idea. It is still in
 ###1.Storage
 The class Storage is a data management. If you want to use the recognition, you must create a storage and init it.<br>
 
++  **__init__(path=DEFAULT_DATA_PATH)**<br \>
+  Parameters:<br \>
+  DEFAULT_DATA_PATH = "./data"
+
+
 ####1) Functions.
 
 +  **query(file)**:<br \>
 query the file if was saved in storage.<br \>
+*file*: file path.<br \>
 +  **clean_up()**:<br \>
  clean all items in this storage. Should be caution to use.<br \>
 +  **forget(file)**:<br \>
  forget/delete a file.<br \>
+*file*: file path.<br \>
 +  **items()**:<br \>
  show all item which was saved in storage<br \>
 +  **commit()**:<br \>
  commit the changes<br \>
 + **Open(file)** : <br \>
- open a wave file and return a WaveForm Object. If file is None, it will open an empty WaveForm.
+ open a wave file and return a WaveForm Object. If file is None, it will open an empty WaveForm.<br \>
+*file*: file path.<br \>
 
 
 ####2) Examples.
@@ -93,22 +101,36 @@ Custom settings:
 
 ###2.WaveForm
 WaveForm is a class that can be used to recognize or detect broken frame.<br \>
++  **__init__(framerate, data, storage=None, filename=None, channels=2)**<br \>
+ Parameters:<br \>
+	framerate --- sample rate.
+	data  ---  a data list required.
+	storage --- A reference storage manager. Default is None.<br \>
+	filename --- Waveform filename. Default is None.<br \>
+	channels --- channels number. Default is 2.<br \>
+	
 ####1) Functions.
 Basic Functions:<br \>
-+  **write**:<br \>
++  **write(data)**:<br \>
  write new data to waveform.<br \>
-+  **detec_broken_frame**:<br \>
- broken frame detection.<br\>
-+  **get_volume**:<br \>
+ *data*: a list required.<br \>
++  **detec_broken_frame(ch=None)**:<br \>
+ broken frame detection.<br \>
+ *ch*: default stereo mode---None, mono mode---0/1 (0: left, 1:right)<br\>
++  **get_volume(ch=None)**:<br \>
  compute the average volume of this waveform.<br \>
-+ **get_THD**:<br \>
- compute the THD+N<br \>
+ *ch*: default stereo mode---None, mono mode---0/1 (0: left, 1:right)<br \>
++ **get_THD(ch==None)**:<br \>
+ compute the THD+N.<br \>
+ *ch*: default stereo mode---None, mono mode---0/1 (0: left, 1:right)<br \>
 
 Recognition Functions:<br \>
-+  **hear**:<br \>
- hear/extract the fingerprints to storage.<br \>
-+  **recognize**:<br \>
- audio recognition.<br \>
++  **hear()**:<br \>
+  hear/extract the fingerprints to storage.<br \>
++  **recognize(ch=None, Fast=True)**:<br \>
+ audio recognition. <br \>
+ *ch*: default stereo mode---None, mono mode---01/1(0: left, 1:right).<br \>
+ *Fast*: means fast search, if the accuracy is high enough, it will search in right channel. default True.
 
 ###2) Examples
 open an waveform
