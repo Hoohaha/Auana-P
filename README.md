@@ -10,7 +10,7 @@ Auana support microphone records and file analysis. File analysis only support "
 
 Except using for recognitions, it will more focus on audio signal analysis. 
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
-So for the automation of audio validation, it may be a good idea. It is still in developing. If you are intereted in it, welcome to contact me by Email.<br>
+So for the automation of audio validation, it may be a good idea. It is still in developing. Any comments, suggestions welcomed. My Email: solo.footprint@foxmail.com.
 
 ##Requirments:
 -----------------------------------
@@ -94,21 +94,21 @@ Custom settings:
 ###2.WaveForm
 WaveForm is a class that can be used to recognize or detect broken frame.<br \>
 ####1) Functions.
->Basic Functions:<br \>
->+  **write**:<br \>
-> write new data to waveform.<br \>
->+  **detec_broken_frame**:<br \>
-> broken frame detection.<br\>
->+  **get_volume**:<br \>
-> compute the average volume of this waveform.<br \>
->+ **get_THD**:<br \>
-> compute the THD+N<br \>
+Basic Functions:<br \>
++  **write**:<br \>
+ write new data to waveform.<br \>
++  **detec_broken_frame**:<br \>
+ broken frame detection.<br\>
++  **get_volume**:<br \>
+ compute the average volume of this waveform.<br \>
++ **get_THD**:<br \>
+ compute the THD+N<br \>
 
->Recognition Functions:<br \>
->+  **hear**:<br \>
-> hear/extract the fingerprints to storage.<br \>
->+  **recognize**:<br \>
-> audio recognition.<br \>
+Recognition Functions:<br \>
++  **hear**:<br \>
+ hear/extract the fingerprints to storage.<br \>
++  **recognize**:<br \>
+ audio recognition.<br \>
 
 ###2) Examples
 open an waveform
