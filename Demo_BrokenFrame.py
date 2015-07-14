@@ -2,7 +2,7 @@ import sys, os
 from auana import *
 
 if __name__ == '__main__':
-	print "Title: Broken Frame Demo"
+	print ("Title: Broken Frame Demo")
 	print "Note: This demo will find where is broken-frames in a song.\n\n"
 
 
@@ -13,12 +13,12 @@ if __name__ == '__main__':
 		os._exit(1)
 
 
-	d,f,n = Load_file(path)
+	w = Open(path)
 
-	bf = Detect_broken_frame(d[0],d[1],f)
+	bf = w.detect_broken_frame()
 
-	print "left  channel:", bf["left"]
-	print "right channel:", bf["right"]
+	print ("left  channel:", bf["left"])
+	print ("right channel:", bf["right"])
 
 
 	os.system("pause")

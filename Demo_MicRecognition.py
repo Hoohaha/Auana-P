@@ -10,7 +10,7 @@ print ("Title: Mic Recognition Demo")
 pa      = PyAudio()
 storage = Storage()
 
-w = WaveForm(storage)
+w = storage.Open()
 
 samplerate = storage.get_framerate()
 chunk = 1024
