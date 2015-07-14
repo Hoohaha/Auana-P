@@ -4,8 +4,6 @@ import numpy as np
 from ctypes import *
 from auana.common import hann
 
-__DIR = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
-
 #############################################################################
 #Structure Definition:
 #1>
@@ -22,34 +20,39 @@ class COMPARE_PARAMETERS(Structure):
 				("threshold"  , c_short),
 				("num_win"    , c_short)]
 
+__PATH = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
+
 ############################################################################
 #Load the "compare" function from compare.so
-ham = cdll.LoadLibrary(__DIR+"/Compare.so")
+com = cdll.LoadLibrary(__PATH + "/Compare.so")
 
-ham.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
+com.Compare.argtypes = [np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"),
 						np.ctypeslib.ndpointer(dtype=np.uint32, ndim=1, flags="C_CONTIGUOUS"), 
 						c_int,
 						c_int,
 						COMPARE_PARAMETERS]
 
-ham.Compare.restype = MATCH_INFO
+com.Compare.restype = MATCH_INFO
 
 ###########################################################################
 #Global Parameters
 #Default FFT Size: How many data in FFT process, this value must be 2^n. 
-DEF_FFT_SIZE = 4096
-#Default Overlap Frame Depth 
-DEF_OVERLAP = 2
+DEF_FFT_SIZE = 2048
+#Default Overlap Frame Depth: 0~1
+DEF_OVERLAP  = 0.5
 #Default Fingerprint Bit Depth
-DEF_FIN_BIT = 30
+DEF_FIN_BIT  = 32
 #Default Max frequency
-DEF_MAX_FRQ = 4000.0
+DEF_MAX_FRQ  = 4000.0
 
 ###########################################################################
 #Max Mel Frequency
 MEL = (2596*np.log10(1+DEF_MAX_FRQ/700.0))/(DEF_FIN_BIT+1.0)
 
-#The upper and lower bounds of sub-band. when framerate is 44100
+
+###########################################################################
+# The upper and lower bounds of sub-band. 
+# framerate/fft_size = 44100/4096 = 22050/2048
 BandTable_1 = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22], 
 			   [17 ,  27], [22 ,  32], [27 ,  38], [32 ,  44], 
 			   [38 ,  51], [44 ,  58], [51 ,  65], [58 ,  73], 
@@ -58,7 +61,9 @@ BandTable_1 = [[0  ,   8], [4  ,  12], [8,    17], [12 ,  22],
 			   [141, 166], [153, 180], [166, 195], [180, 210], 
 			   [195, 226], [210, 244], [226, 262], [244, 282], 
 			   [262, 302], [282, 324], [302, 347], [324, 372]]
-
+# framerate/fft_size = 44100/2048
+ 
+# framerate/fft_szie = 22050/4096
 BandTable_2 = [[0 ,   16], [8  ,  25], [16 ,  34], [25 ,  44], 
 			   [34 ,  54], [44 ,  65], [54 ,  76], [65 ,  89], 
 			   [76 , 102], [89 , 115], [102, 130], [115, 145],
@@ -67,6 +72,7 @@ BandTable_2 = [[0 ,   16], [8  ,  25], [16 ,  34], [25 ,  44],
 			   [282, 333], [307, 360], [333, 390], [360, 420], 
 			   [390, 453], [420, 488], [453, 524], [488, 563], 
 			   [524, 605], [563, 648], [605, 694], [648, 743]]
+
 
 
 def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
@@ -138,7 +144,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	elif 90 <= tlen <= 900:
 		window_size, offset, fault_tolerant = 16,  1,  7
 	else:
-		window_size, offset, fault_tolerant = 100, 3,  6
+		window_size, offset, fault_tolerant = 128, 2,  6
 
 
 	compare_config = COMPARE_PARAMETERS()
@@ -146,7 +152,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	compare_config.window_size = window_size
 	compare_config.offset      = offset
 	compare_config.threshold   = (int)(window_size*fault_tolerant)
-	compare_config.num_win     = tlen/window_size
+	compare_config.num_win     = (int)(tlen/window_size)
 	
 
 
@@ -177,23 +183,23 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 			max_accuracy = accuracy
 			match_position = position
 	else:
-		for index in xrange(MaxID):
+		for index in range(MaxID):
 			sdata,slen = get_reference_data(index)
 			accuracy,position = compare(sdata, tdata, tlen, slen, compare_config)
 			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
 			if accuracy >= 0.5:
-				match_index  = index
-				max_accuracy = accuracy
+				match_index    = index
+				max_accuracy   = accuracy
 				match_position = position
 				break
 			#Filter: find the max accuracy, and return
 			elif accuracy > max_accuracy:
-				match_index  = index
-				max_accuracy = accuracy
+				match_index    = index
+				max_accuracy   = accuracy
 				match_position = position
 
 	#transfer to time scale
-	match_position = match_position * (DEF_FFT_SIZE / DEF_OVERLAP) / framerate
+	match_position = match_position * (DEF_FFT_SIZE * DEF_OVERLAP) / framerate
 	return match_index, max_accuracy, match_position
 
 
@@ -227,7 +233,7 @@ def compare(sdata,tdata,tlen,slen, compare_config):
 		2) If accuracy is too low when we have finished the majority search, directly search next file.
 		3) Use ".so".
 	'''
-	r = ham.Compare(tdata, sdata, tlen, slen, compare_config)
+	r = com.Compare(tdata, sdata, tlen, slen, compare_config)
 	return r.accuracy, r.position
 	
 
@@ -247,29 +253,27 @@ def get_fingerprint(wdata,framerate):
 	hanning = hann(DEF_FFT_SIZE, sym=0)
 
 	#divide the frequency sub-band
-	if framerate == 44100:
+	if (framerate==44100 and DEF_FFT_SIZE==4096) or(framerate==22050 and DEF_FFT_SIZE==2048):
 		BandTable = BandTable_1
-	elif framerate == 22050:
+	elif (framerate==22050 and DEF_FFT_SIZE==4096):
 		BandTable = BandTable_2
 	else:
+		#compute Band table
 		BandTable = []
 		#frequency scale
 		scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
-
+		#temp variable
 		TEM = MEL/2596.0
 		#compute the sub-band
-		for n in xrange(1,DEF_FIN_BIT+1):
+		for n in range(1,DEF_FIN_BIT+1):
 			b0 = int(round(700*(10**((n-1)*TEM)-1)/scale,0))
 			b1 = int(round(700*(10**((n+1)*TEM)-1)/scale,0))
 			BandTable.append((b0,b1))
 
-	Max_Band = BandTable[DEF_FIN_BIT-1][1]
-
-	#volume compute
-	sumdb = 0
-	num = 0
+	Max_Band = BandTable[DEF_FIN_BIT-1][1]+1
 
 	fin_array= []
+
 	#init index of "wdata"
 	s = 0
 	e = DEF_FFT_SIZE
@@ -283,12 +287,12 @@ def get_fingerprint(wdata,framerate):
 		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:Max_Band]))
 
 		#update index
-		s = s + DEF_FFT_SIZE/DEF_OVERLAP
+		s = s + DEF_FFT_SIZE*DEF_OVERLAP
 		e = s + DEF_FFT_SIZE
 
 		subfin = 0
 
-		for n in xrange(0,DEF_FIN_BIT):
+		for n in range(0, DEF_FIN_BIT):
 			#BandTable look-up
 			#use a BandTable to improve the speed of computation
 			b0 = BandTable[n][0]
@@ -297,7 +301,7 @@ def get_fingerprint(wdata,framerate):
 			max_fp = 0
 			max_b  = 0
 
-			for b in xrange(b0,b1):
+			for b in range(b0,b1):
 
 				#Compute the max frequency value
 				if (xfp[b] > max_fp):

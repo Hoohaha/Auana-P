@@ -11,7 +11,7 @@ framerate = s.get_framerate()
 
 print framerate
 
-wf = s.openf("E:/Auana-P/2-sample.wav")
+wf = s.Open("E:/Auana-P/2-sample.wav")
 
 # wf.hear()
 
