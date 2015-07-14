@@ -12,29 +12,46 @@ Except using for recognitions, it will more focus on audio signal analysis.
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
 So for the automation of audio validation, it may be a good idea. It is still in developing. If you are intereted in it, welcome to contact me by Email.<br>
 
-##Setup:
+##Requirments:
 -----------------------------------
-*  Firstly, install python package "numpy"    (math tool)<br>
-*  Besides, install python package "pyaudio"  (audio play/record library)<br>
+*  [python2.7](https://www.python.org/)  ---  32-bit only.<br />
+*  [numpy](http://www.numpy.org/)  --- Mathmatic.<br />
+*  [pyaudio](http://people.csail.mit.edu/hubert/pyaudio/) --- Audio record and play, Option.<br />
 
 ##Features:
 -----------------------------------
 >1.Broken-frame detection                                      [support]<br>
 >2.Sound recognition                                           [support]<br>
->3.Volume value detection                                      [support]<br>
+>3.Volume value computation                                    [support]<br>
 >4.Audio play and record                                       [support]<br>
->5.Signal noise ratio detection                                [will]<br>
+>5.THD+N                                		       [support]<br>
 >6.Support mp3 ,wma…etc                                        [will]<br>
 >7.Detect noise                                                [will]<br>
 
 
 ##Quickly Start
 -----------------------------------
-1.The class Storage is a data management. 
-If you want to use the recognition, you must create a storage and init it.<br>
+###1.Storage
+The class Storage is a data management. If you want to use the recognition, you must create a storage and init it.<br>
 
-1) Create a new storage to store the data.
-The defalut framerate is 22500, data path is ../auana/data.
+####1) Functions.
+
++  **query(file)**:<br \>
+query the file if was saved in storage.<br \>
++  **clean_up()**:<br \>
+ clean all items in this storage. Should be caution to use.<br \>
++  **forget(file)**:<br \>
+ forget/delete a file.<br \>
++  **items()**:<br \>
+ show all item which was saved in storage<br \>
++  **commit()**:<br \>
+ commit the changes<br \>
++ **Open(file)** : <br \>
+ open a wave file and return a WaveForm Object. If file is None, it will open an empty WaveForm.
+
+
+####2) Examples.
+Create a new storage to store the data.The defalut framerate is 22500, data path is ../auana/data.
 If you want to use the default configuration, see the following example.
 ```python
         try:
@@ -43,7 +60,7 @@ If you want to use the default configuration, see the following example.
                 pass
 ```
 
-
+Custom settings:
 ```python
 #Custom framerate.
         f = 16000
@@ -72,39 +89,59 @@ If you want to use the default configuration, see the following example.
         except ValueError:
                 pass
 ```
-2) Manage the data storage functions:<br>
 
-	query(file)
-	clean_up()   #clean all items
-	forget(file) #forget a file
-	items()      #show all item which was saved in storage
-	commit()     #commit the changes
-        
-	openf(file)  #open a wave file and return a WaveForm Object
 
-2.WaveForm
-WaveForm is a class that can be used to recognize or detect broken frame.
+###2.WaveForm
+WaveForm is a class that can be used to recognize or detect broken frame.<br \>
+####1) Functions.
+>Basic Functions:<br \>
+>+  **write**:<br \>
+> write new data to waveform.<br \>
+>+  **detec_broken_frame**:<br \>
+> broken frame detection.<br\>
+>+  **get_volume**:<br \>
+> compute the average volume of this waveform.<br \>
+>+ **get_THD**:<br \>
+> compute the THD+N<br \>
 
+>Recognition Functions:<br \>
+>+  **hear**:<br \>
+> hear/extract the fingerprints to storage.<br \>
+>+  **recognize**:<br \>
+> audio recognition.<br \>
+
+###2) Examples
 open an waveform
 ```python
 	from auana import Storage
 
 	sto = Storage()
 
-	w = sto.openf("sample.wav")
+	w = sto.Open("sample.wav")
 ```
 
-or:
+or open an empty WaveForm:
 
 ```python
 	from auana import Storage
 	
 	sto = Storage()
 	
-	w = WaveForm(sto)
+	w = sto.Open()
 	
 	w.write(data) #w.data=data          #data:wave data
 ```
+
+If you don`t use it for recognition. you can use it by the following forms.
+```python
+	from auana import Open
+	
+	w = Open("sample.wav")
+	
+	w.detect_broken_frame()  #for broken frame detection
+```
+
+
 
 1> Save the fingerprints into the storage.
 ```python
@@ -126,24 +163,24 @@ or:
 ```
 
 
-##Example User's Guide
+##Demo User's Guide
 -----
 >1> Prework<br>
 Prework Demo can memory the new files.
 
 >2> MIC Recognition<br>
-This is a Demo for showing how to recognize the data from MIC. You can double click the "Example_MICRecognition" to run.<br>
+This is a Demo for showing how to recognize the data from MIC. You can double click the "Demo_MICRecognition" to run.<br>
 And then you can play a song and press "Enter" to make the demo to processing.
 
 >3> File Search<br>
-Drag the sample ".wav" file into "Example_FileSearchDemo.py".
+Drag the sample ".wav" file into "Demo_FileSearchDemo.py".
 
 >4> Broken Frame<br>
-Drag the sample into "Example_BrokenFrame.py". 
+Drag the sample into "Demo_BrokenFrame.py". 
 
 ##Performance
 -----
-There are 180 files in the "auana/data" folder. Follow figure shows the relationships between record-time and search time.
+There are 180 files in the "./data" folder. Follow figure shows the relationships between record-time and search time.
 
 ![7](doc/figure_2.png)
 
