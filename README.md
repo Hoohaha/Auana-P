@@ -58,44 +58,40 @@ query the file if was saved in storage.<br \>
 *file*: file path.<br \>
 
 
-####2) Examples.
-Create a new storage to store the data.The defalut framerate is 22500, data path is ../auana/data.
-If you want to use the default configuration, see the following example.
+####2) Create a new storage.
+Create a new storage to store the data. The defalut settings: framerate is 22500, data path is ../data.
+Use the default configuration, see the following example.
 ```python
-        try:
-                Create()
-        except ValueError:
-                pass
+try:
+    Create()
+except ValueError:
+    pass
 ```
 
 Custom settings:
 ```python
-#Custom framerate.
-        f = 16000
-        try:
-                Crate(framerate=f)
-        except ValueError:
-                pass
+#Custom framerate: 16000.
+try:
+    Crate(framerate=1600)
+except ValueError:
+    pass
 ```
 
 ```python
 #Custom data path.
-        data_path = "C:/data"
-        try:
-                Crate(path=data_path)
-        except ValueError:
-                pass
+try:
+    Crate(path="C:/data")
+except ValueError:
+    pass
 ```
 
 
 ```python
 #Custom framerate and data path.
-        f = 16000
-        data_path = "C:/data"
-        try:
-                Crate(framerate=f, path=data_path)
-        except ValueError:
-                pass
+try:
+    Crate(framerate=16000, path="C:/data")
+except ValueError:
+    pass
 ```
 
 
@@ -135,53 +131,53 @@ Recognition Functions:<br \>
 ###2) Examples
 open an waveform
 ```python
-	from auana import Storage
+from auana import Storage
 
-	sto = Storage()
+sto = Storage()
 
-	w = sto.Open("sample.wav")
+w = sto.Open("sample.wav")
 ```
 
 or open an empty WaveForm:
 
 ```python
-	from auana import Storage
-	
-	sto = Storage()
-	
-	w = sto.Open()
-	
-	w.write(data) #w.data=data          #data:wave data
+from auana import Storage
+
+sto = Storage()
+
+w = sto.Open()
+
+w.write(data) #w.data=data          #data:wave data
 ```
 
 If you don`t use it for recognition. you can use it by the following forms.
 ```python
-	from auana import Open
-	
-	w = Open("sample.wav")
-	
-	w.detect_broken_frame()  #for broken frame detection
+from auana import Open
+
+w = Open("sample.wav")
+
+w.detect_broken_frame()  #for broken frame detection
 ```
 
 
 
 1> Save the fingerprints into the storage.
 ```python
-	w.hear()
+w.hear()
 ```
 2> For recognition:
 
 ```python
-	name, accuracy, position = w.recognize()
+name, accuracy, position = w.recognize()
 ```
 3>For broken frame detection:
 ```python
-	bf = w.detect_broken_frame()
+bf = w.detect_broken_frame()
 ```
 4>Get the volume:
 
 ```python
-	v = w.get_volume()
+v = w.get_volume()
 ```
 
 
