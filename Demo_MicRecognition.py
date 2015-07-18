@@ -21,7 +21,7 @@ print ("Channels: %d  Samplerate:%6d   Bits:%2d\n\n"%(channels,samplerate,16))
 
 
 
-Time = 5
+Time = 4
 NUM = int((samplerate*Time)/float(chunk))
 
 save_buffer = []

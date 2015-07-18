@@ -140,11 +140,11 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	#fault_tolerant: How many fault bits in a 32-bit fingerprints
 
 	if tlen < 90:
-	 	window_size, offset, fault_tolerant = 4,   1,  10
+	 	window_size, offset, fault_tolerant = 4,   1,  12
 	elif 90 <= tlen <= 900:
-		window_size, offset, fault_tolerant = 16,  1,  7
+		window_size, offset, fault_tolerant = 16,  1,  13
 	else:
-		window_size, offset, fault_tolerant = 128, 2,  6
+		window_size, offset, fault_tolerant = 128, 2,  13
 
 
 	compare_config = COMPARE_PARAMETERS()
