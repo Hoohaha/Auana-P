@@ -29,7 +29,7 @@ except NameError:
 
 if sample_path == "":
 	sample_path = "C:\FFOutput"
-
+number = 1
 s = time.time()
 for parent, dirnames, filenames in os.walk(sample_path):
 	for filename in filenames:
@@ -38,16 +38,19 @@ for parent, dirnames, filenames in os.walk(sample_path):
 			filepath = os.path.join(parent, filename).replace('\\','/')
 			filename = os.path.basename(filepath)
 
-			print (filename)
+			print ("%d  %s"%(number,filename))
+
 			start = time.time()
 
 			if storage.query(filename) is False:
 				storage.Open(filepath).hear()
 
+			number += 1
+
 			end = time.time()
 			
-			print ("time cost %f \n"%(end-start))
-			print (" ")
+			print ("time cost %.2f \n"%(end-start))
+
 
 storage.commit()
 
@@ -55,4 +58,4 @@ e = time.time()
 
 storage.items()
 
-print ("total time %f'%f"%((e-s)/60,(e-s)%60))
+print ("total time %d'%.2f"%((e-s)/60,(e-s)%60))

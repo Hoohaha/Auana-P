@@ -103,7 +103,7 @@ struct match_info Compare(uint32 *tData, uint32 *sData, int tlen, int slen, stru
 		}
 
 		if (i>20 && confidence < 3)
-			return m;//stop find
+			return m;//stop search
 	}
 
 	if(confidence<1)

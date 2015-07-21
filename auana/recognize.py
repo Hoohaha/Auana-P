@@ -203,6 +203,9 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	return match_index, max_accuracy, match_position
 
 
+
+
+
 #######################################################
 #    search function                                                                                                    
 #######################################################
@@ -239,6 +242,9 @@ def compare(sdata,tdata,tlen,slen, compare_config):
 
 
 
+
+
+
 ###########################################################
 #   Get audio fingerprint
 ###########################################################
@@ -250,7 +256,7 @@ def get_fingerprint(wdata,framerate):
 	data_len = wdata.shape[-1]
 
 	#hanning window
-	hanning = hann(DEF_FFT_SIZE, sym=0)
+	hanning = _hann(DEF_FFT_SIZE, sym=0)
 
 	#divide the frequency sub-band
 	if (framerate==44100 and DEF_FFT_SIZE==4096) or(framerate==22050 and DEF_FFT_SIZE==2048):
@@ -304,12 +310,12 @@ def get_fingerprint(wdata,framerate):
 			for b in range(b0,b1):
 
 				#Compute the max frequency value
-				if (xfp[b] > max_fp):
+				if (xfp[b]  >  max_fp):
 					max_fp = xfp[b]
 					max_b  = b
 
 			#generate the fingerprint
-			if max_b - (b0+b1)/2 >= 0:
+			if (max_b - (b0+b1)/2 > 0):
 				subfin |= 1<<n
 
 		fin_array.append(subfin)

@@ -80,7 +80,7 @@ def Create(framerate = DEFAULT_FRAMERATE, path = DEFAULT_DATA_PATH):
 	def _create_pkl():
 		catalog["FRAMERATE"] = framerate
 		pklf = open(catalog_path, 'wb')
-		pickle.dump(catalog, pklf)
+		pickle.dump(catalog, pklf, 2)
 		pklf.close()
 
 	catalog_path = path + CATALOG_FILE
@@ -110,10 +110,6 @@ def Open(f):
 		raise IOError("Not support yet!")
 
 	return WaveForm(framerate=framerate, data=data, filename=filename, channels=nchannels)
-
-
-
-
 
 
 
@@ -188,10 +184,9 @@ class Storage:
 		for item in te:
 			print ("  %3s       %s"%(item[0],item[1]))
 
-
 	def commit(self):
 		cfile = open(self.pkl, 'wb')
-		pickle.dump(self._catalog, cfile)
+		pickle.dump(self._catalog, cfile, 2)
 		cfile.close()
 
 
@@ -371,7 +366,3 @@ def _wave_get_data(f):
 	data = data.T #Transpose
 
 	return data, framerate, nchannels
-
-
-
-
