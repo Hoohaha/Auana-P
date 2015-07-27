@@ -26,27 +26,27 @@ def detect_broken_frame(wdata,framerate):
 	|		|		|
 	|		|		|		
 	|		|		|
-	| var0	| var1	|  		
+	| amp0	| amp1	|  		
 	|		|		|_______		
-	|		|		|  var	|
+	|		|		|  amp	|
 	|_______|_______|_______|   
 	_____________          
 		         \         
 		          |
 		          |_______
 
-	  		 _______ _______         
+	  		 _______________         
 			|		|		|
 			|		|		|
 			|		|		|
-	 	    |  var1	|  var	|
+	 	    | 		|  amp	|
 	 _______|		|		|
-	| var0	|		|  		|
+	| amp0	|  amp1	|  		|
 	|_______|_______|_______|   
-			 ________________
-			/		
-			|
-	________|
+					 _________
+					/		
+					|
+	________________|
 	'''
 	# num = 0
 	# bf = np.zeros(5)
@@ -55,33 +55,63 @@ def detect_broken_frame(wdata,framerate):
 	# 	bf = []
 	# return list(bf)
 
+	DETECT_WIN    = 128
+	AMP_THRESHOLD = 0.5
+	up_edge       = False
 
-	FLAG = 0
-	DETECT_WIN = 256
-	VAR_THRESHOLD = 2000
-	bf = []
-	var0 = var1 = 0
-	for i in  xrange(len(wdata)/DETECT_WIN):
-		var = int(np.var(wdata[i*DETECT_WIN:(i+1)*DETECT_WIN]))
-		if i>1:
-			if FLAG == 0:
-				distance0 = var0-var
-				distance1 = var1-var
-				if (distance0 > VAR_THRESHOLD) and (distance1 > VAR_THRESHOLD) and (var < 90) :
-					FLAG = 1
-					bftime = round(((i+1-1) * DETECT_WIN)/float(framerate),3)
-					# print "U",distance0,distance1
-			elif FLAG == 1:
-				distance0 = var - var0
-				distance1 = var1- var0
-				if (distance0 >VAR_THRESHOLD) and (distance1 > VAR_THRESHOLD) and (var0 < 90):
-					# print "F",distance0,distance1
-					FLAG = 0
-					bf.append(bftime)
-				#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
-				elif i%860 == 0:
-					FLAG = 0
-		var0,var1=var1,var
+	w    = DETECT_WIN
+	amp0 = amp1 = 0
+	bf   = []
+
+	AMP_ARRAY = []
+
+	for i in  xrange(len(wdata)/w):
+
+		tem = np.sum(np.abs(wdata[i*w:(i+1)*w]))
+
+		if tem !=0:amp = np.log10(tem) #amplitude
+		else:amp = 0
+			
+
+		AMP_ARRAY.append(amp)
+
+
+		#Up edge detection
+		if up_edge is False:
+			distance0 = amp0-amp
+			distance1 = amp1-amp
+
+			if (distance0 > AMP_THRESHOLD) and (distance1 > AMP_THRESHOLD):
+				bft = round((i*w)/float(framerate),3)
+				up_edge = True
+
+		#Falling edge detection
+		else:
+			distance0 = amp-amp0
+			distance1 = amp1-amp0
+
+			if (distance0 > AMP_THRESHOLD) and (distance1 > AMP_THRESHOLD):
+				up_edge = False
+				bf.append(bft)
+
+			#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
+			elif i%1000 == 0:
+				up_edge = False
+
+
+		#Update amp0 & amp1
+		amp0,amp1=amp1,amp
+
+
+	#######################################
+	import matplotlib.pyplot as plt
+	x = range(len(wdata)/w)
+	plt.title("")
+	plt.xlabel('Window')
+	plt.ylabel('Amplitude  (log)')# 
+	plt.plot(x,AMP_ARRAY)
+	plt.show()
+	#######################################
 
 	if len(bf) == 0:
 		return 0
