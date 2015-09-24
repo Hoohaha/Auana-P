@@ -1,6 +1,6 @@
 import numpy as np
 import wave, struct, os
-
+import time
 ###########################################################################
 #Global Parameters
 #Default FFT Size: How many data in FFT process, this value must be 2^n. 
@@ -40,6 +40,8 @@ BandTable_2 = [[0 ,   16], [8  ,  25], [16 ,  34], [25 ,  44],
 			   [390, 453], [420, 488], [453, 524], [488, 563], 
 			   [524, 605], [563, 648], [605, 694], [648, 743]]
 
+BandTable_3 = [(0, 4), (2, 6), (4, 8), (6, 11), (8, 13), (11, 16), (13, 19), (16, 22), (19, 25), (22, 29), (25, 33), (29, 36), (33, 40), (36, 45), (40, 49), (45, 54), (49, 59), (54, 65), (59, 71), (65, 77), (71, 83), (77, 90), (83, 98), (90, 105), (98, 113), (105, 122), (113, 131), (122, 141), (131, 151), (141, 162), (151, 174), (162, 186)]
+
 ###########################################################
 #   Get audio fingerprint
 ###########################################################
@@ -63,13 +65,16 @@ def get_fingerprint(wdata,framerate):
 		BandTable = []
 		#frequency scale
 		scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+
 		#temp variable
 		TEM = MEL/2596.0
 		#compute the sub-band
 		for n in range(1,DEF_FIN_BIT+1):
+			# print "%f, %f"%(700*(10**((n-1)*TEM)-1),700*(10**((n+1)*TEM)-1))
 			b0 = int(round(700*(10**((n-1)*TEM)-1)/scale,0))
 			b1 = int(round(700*(10**((n+1)*TEM)-1)/scale,0))
 			BandTable.append((b0,b1))
+
 
 	Max_Band = BandTable[DEF_FIN_BIT-1][1]+1
 
@@ -87,13 +92,14 @@ def get_fingerprint(wdata,framerate):
 		#fft transfer
 		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:Max_Band]))
 
+
 		#update index
 		s = s + DEF_FFT_SIZE*DEF_OVERLAP
 		e = s + DEF_FFT_SIZE
 
 		subfin = 0
 
-		for n in range(0, DEF_FIN_BIT):
+		for n in xrange(1, DEF_FIN_BIT):
 			#BandTable look-up
 			#use a BandTable to improve the speed of computation
 			b0 = BandTable[n][0]
@@ -102,12 +108,12 @@ def get_fingerprint(wdata,framerate):
 			max_fp = 0
 			max_b  = 0
 
-			for b in range(b0,b1):
+			for b in xrange(b0,b1+1):
 
 				#Compute the max frequency value
 				if (xfp[b]  >  max_fp):
 					max_fp = xfp[b]
-					max_b  = b
+					max_b  = b			
 
 			#generate the fingerprint
 			if (max_b - (b0+b1)/2 >= 0):
@@ -152,6 +158,7 @@ def hamming_weight(x):
 	return x & 0x7f
 
 def GET(path):
+	start = time.time()
 	wf = wave.open(path, 'rb')#"E:\\Auana-P\\1-broken.wav" "E:\\FFOutput\\b.wav"
 	params = wf.getparams()
 	nchannels, sampwidth, framerate, nframes = params[:4]
@@ -162,7 +169,7 @@ def GET(path):
 	wave_data.shape = -1,2
 	wave_data = wave_data.T #transpose multiprocessing.Process
 
-	return get_fingerprint(wave_data[0],22050)
+	return get_fingerprint(wave_data[0],framerate)
 
 
 
@@ -181,21 +188,54 @@ def lbrate(a, b, dp):
 
 def compare_x(f1, f2, dp=False):
 	a = GET(f1)
+	s = time.time()
 	b = GET(f2)
+	e = time.time()
+	# print "time:",e-s
 	rate = lbrate(a,b,dp)
 
-	print rate
+	return rate
+
+
+
+def noise_test():
+
+	import matplotlib.pyplot as plt
+
+	plt.title("Diagram")
+	plt.xlabel('Noise')
+	plt.ylabel('Fault rate')
+
+	print ("NEW --- NEW")
+
+
+	print compare_x("1-sample.wav","5.wav")
+	print compare_x("1-sample.wav","10.wav")
+	print compare_x("1-sample.wav","15.wav")
+	print compare_x("1-sample.wav","20.wav")
+	print compare_x("1-sample.wav","25.wav")
+	print compare_x("1-sample.wav","30.wav")
+	print compare_x("1-sample.wav","35.wav")
+	print compare_x("1-sample.wav","40.wav")
+
+
+
+
+def fft_size_test():
+	print compare_x("1-sample.wav","f_noise_25.wav")
+
+def time_test():
+	t = []
+	t.append(GET("1.wav"))
+	t.append(GET("2.wav"))
+	t.append(GET("3.wav"))
+	t.append(GET("4.wav"))
+	t.append(GET("5.wav"))
+	t.append(GET("6.wav"))
+	print t
 
 
 
 print ("NEW --- NEW")
-
-compare_x("1-sample.wav","b_noise_10.wav")
-compare_x("1-sample.wav","b_noise_15.wav")
-compare_x("1-sample.wav","b_noise_20.wav")
-compare_x("1-sample.wav","b_noise_25.wav")
-compare_x("1-sample.wav","b_noise_30.wav",True)
-
-
-print ("NEW --- NEW")
+noise_test()
 os.system("pause")

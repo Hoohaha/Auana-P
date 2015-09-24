@@ -3,18 +3,21 @@ import numpy as np
 from auana.common import hann
 
 
-DEF_FFT_SIZE = 4096
+DEF_FFT_SIZE = 4096.0
 
-def compute_thd(wdata,framerate,f=1000):
+def compute_thdn(wdata,framerate,f=1000):
+
+	STANDARD_ZCR = int(DEF_FFT_SIZE/framerate*f*2)
+
 	#data length
-	data_len = wdata.shape[-1]
+	data_len = len(wdata)
 
 	#hanning window
 	hanning = hann(DEF_FFT_SIZE, sym=0)
 
-	num = data_len/DEF_FFT_SIZE
+	num = int(data_len/DEF_FFT_SIZE)
 
-	scale = (framerate/2)/(DEF_FFT_SIZE/2+1.0)
+	scale = (framerate/2.0)/(DEF_FFT_SIZE/2.0+1.0)
 
 	max_freq = int(20000/scale)
 
@@ -24,58 +27,84 @@ def compute_thd(wdata,framerate,f=1000):
 
 	zcr_last = 0
 
-	flag = False
+	flag  = False
+	start = False
 
-	f_upper = int((f+50)/scale)
-	f_lower = int((f-50)/scale)
+	f_upper = int((f+400)/scale)
+	f_lower = int((f-400)/scale)
 
-	############################IIR#############################
-	# b, a = signal.iirdesign([0.043, 0.048],[0.043, 0.048], 1, 100)
 
-	# w, h = signal.freqz(b, a)
-
-	for n in xrange(num):
+	for n in xrange(num):#num
 
 		frame = wdata[n*DEF_FFT_SIZE: (n+1)*DEF_FFT_SIZE]
 
 		zcr = compute_zcr(frame)
 
-		if abs(zcr_last - zcr) <=3 and zcr > 60:
-			flag = True
-
-		zcr_last = zcr
-
-		if flag is False:
+		if (STANDARD_ZCR-2) <= zcr <= (STANDARD_ZCR+2):
+			flag  = True
+			start = True
+		else:
 			continue
+
+		if start is True and flag is False:
+			return 100
+
 
 		count += 1
 
-		#2)hanning window to smooth the edge
+		#hanning window to smooth the edge
 		xs = np.multiply(frame, hanning)
+		xfp = np.absolute(np.fft.rfft(xs))
 
 		#fft transfer
-		xfp = 20*np.log10(np.abs(np.fft.rfft(xs)[0:max_freq]))#
+		# xfp = 20*np.log10(xc)#
 
-		fundamental_scope = xfp[f_lower:f_upper]
+		#Note: xun zhao jian feng suan fa
+		fund_scope = xfp[f_lower:f_upper]
+		fun  = fund_scope.max()
+		xfp[f_lower:f_upper] = -200
 
-		fundamental_freq  = fundamental_scope.max()
 
-		fundamental_freq  = 10**(fundamental_freq/20)
+		d = xfp[int(40/scale):int(1500/scale)].max()
+		d = d**2
 
-		xfp[f_lower:f_upper] = 0
+		for i in xrange(10):
+			temp = xfp[(1500+i*2000)/scale:(1500+(i+1)*2000)/scale].max()
+			d += temp**2
 
-		v = xfp.max()
+		thd += np.sqrt(d)/fun
 
-		value = 10**(v/20)
-
-		thd += value/fundamental_freq
-
-		if count > 6:
-			thd = thd/count
-			return thd*100
-
-	if thd == 0:
+	if count == 0:
 		return 100
+
+	thd = thd/count
+	return thd*100
+
+
+def vvv_transfer(db):
+	return 10**(db/20)
+
+
+def compute_mm(data):
+	w = 4096
+	length = len(data)
+	s = 0
+	e = w
+
+	max_m = []
+
+	for i in xrange(length/w):
+		d = data[s:e]
+		s = e
+		e += w
+
+		a = d.max()
+		b = d.min()
+
+		f = (a-b)*0.707
+
+		max_m.append(f)
+	return np.mean(max_m)
 
 
 
@@ -89,7 +118,6 @@ def compute_volume(wdata,framerate):
 	fft_size = DEF_FFT_SIZE
 
 	num = data_len/fft_size
-
 
 	scale = (framerate/2.0)/(fft_size/2+1.0)
 
@@ -131,4 +159,4 @@ def compute_zcr(frame):
 		z += abs(x_now - x_last)
 		x_last = x_now
 
-	return z
+	return z/2

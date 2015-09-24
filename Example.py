@@ -1,17 +1,22 @@
-from auana import Storage, Create
-
+from auana import WaveForm, Create, Open
+import numpy as np
 try:
 	Create()
 except ValueError:
 	pass
 
-s = Storage()
-# s.items()
-framerate = s.get_framerate()
+# s = Storage()
+# # s.items()
+# framerate = s.get_framerate()
 
-print framerate
+# print framerate
+# fs = 44100
+# t = np.arange(0, 1, 1.0/fs)
+# x = 32767*np.sin(2*np.pi*1000*t)+50*np.sin(2*np.pi*10*t)
+# wf=WaveForm(44100,x,channels=1)
 
-wf = s.Open("E:/Auana-P/2-sample.wav")
+wf = Open("C:/Users/solof/Desktop/Auana-P/122.wav")
+
 
 # wf.hear()
 
@@ -19,5 +24,5 @@ wf = s.Open("E:/Auana-P/2-sample.wav")
 # print wf.recognize(Fast=False)
 # print wf.recognize(Mono=True,Ch=0)
 # print wf.detect_broken_frame()
-print wf.get_volume()
-print wf.get_THD()
+# print wf.get_volume()
+print wf.get_THD(ch=0)

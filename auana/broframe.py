@@ -10,7 +10,8 @@ import numpy as np
 # 							c_int]
 # bro.broken_frame.restype = c_int
 
-def detect_broken_frame(wdata,framerate):
+def detect_broken_frame(wdata, framerate):
+
 	'''
 	To detect broken frame.
 
@@ -22,6 +23,7 @@ def detect_broken_frame(wdata,framerate):
 	Returns
     ----------
     bf: broken frame                          	Type:[list]
+
 	 _______ _______           
 	|		|		|
 	|		|		|		
@@ -55,13 +57,18 @@ def detect_broken_frame(wdata,framerate):
 	# 	bf = []
 	# return list(bf)
 
-	DETECT_WIN    = 128
-	AMP_THRESHOLD = 0.5
+	# frame length: 5ms
+	FRAME_LENGTH  = 0.005
+	AMP_THRESHOLD = 0.4
 	up_edge       = False
 
-	w    = DETECT_WIN
+	print framerate
+
+	w    = int(framerate*FRAME_LENGTH)
+
 	amp0 = amp1 = 0
 	bf   = []
+	last_dis = 0
 
 	AMP_ARRAY = []
 
@@ -69,33 +76,40 @@ def detect_broken_frame(wdata,framerate):
 
 		tem = np.sum(np.abs(wdata[i*w:(i+1)*w]))
 
-		if tem !=0:amp = np.log10(tem) #amplitude
-		else:amp = 0
-			
+		if tem !=0:
+			amp = np.log10(tem) #amplitude
+		else:
+			amp = 0
+
+		# if i>0:
+		# 	dis = abs(amp - amp0)
+		# 	AMP_ARRAY.append(dis)
+		# amp0 = amp
 
 		AMP_ARRAY.append(amp)
 
 
 		#Up edge detection
 		if up_edge is False:
-			distance0 = amp0-amp
-			distance1 = amp1-amp
+			dis  = amp1-amp
+			ldis = amp0-amp1
 
-			if (distance0 > AMP_THRESHOLD) and (distance1 > AMP_THRESHOLD):
+			if (dis > AMP_THRESHOLD) and (dis-ldis>=0.1):# and (distance1 > 0):#AMP_THRESHOLD-0.2
 				bft = round((i*w)/float(framerate),3)
 				up_edge = True
 
 		#Falling edge detection
 		else:
-			distance0 = amp-amp0
-			distance1 = amp1-amp0
+			dis = amp1-amp0
+			ldis = amp1-amp
 
-			if (distance0 > AMP_THRESHOLD) and (distance1 > AMP_THRESHOLD):
+			if (dis > AMP_THRESHOLD) and (dis-ldis>=0.09):#AMP_THRESHOLD-0.2  (distance0 > 0) and 
+				# print dis-ldis,i,amp0,amp1,amp
 				up_edge = False
 				bf.append(bft)
 
 			#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
-			elif i%1000 == 0:
+			elif i%100 == 0:
 				up_edge = False
 
 
@@ -103,15 +117,58 @@ def detect_broken_frame(wdata,framerate):
 		amp0,amp1=amp1,amp
 
 
-	#######################################
-	import matplotlib.pyplot as plt
-	x = range(len(wdata)/w)
-	plt.title("")
-	plt.xlabel('Window')
-	plt.ylabel('Amplitude  (log)')# 
-	plt.plot(x,AMP_ARRAY)
-	plt.show()
-	#######################################
+		# #Up edge detection
+		# if up_edge is False:
+		# 	distance0 = amp0-amp
+
+		# 	if (distance0 > AMP_THRESHOLD):# and (distance1 > 0):#AMP_THRESHOLD-0.2
+		# 		bft = round((i*w)/float(framerate),3)
+		# 		up_edge = True
+
+		# #Falling edge detection
+		# else:
+		# 	distance0 = amp-amp0
+		# 	distance1 = amp1-amp0
+
+		# 	if (distance1 > AMP_THRESHOLD):#AMP_THRESHOLD-0.2  (distance0 > 0) and 
+		# 		up_edge = False
+		# 		bf.append(bft)
+
+		# 	#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
+		# 	elif i%100 == 0:
+		# 		up_edge = False
+
+
+		# #Update amp0 & amp1
+		# amp0,amp1=amp1,amp
+
+
+	# #######################################
+	# import matplotlib.pyplot as plt
+	# x = range(len(wdata)/w)
+	# plt.title("")
+	# plt.xlabel('Window')
+	# plt.ylabel('Amplitude  (log)')# 
+	# plt.plot(x,AMP_ARRAY)
+	# plt.show()
+	# #######################################
+
+
+
+	# import matplotlib.mlab as mlab
+	# import matplotlib.pyplot as plt
+ 
+	# num_bins = 90
+
+	# # the histogram of the data
+	# n, bins, patches = plt.hist(AMP_ARRAY, num_bins, normed = True, facecolor='green', alpha=0.5)
+
+	# plt.xlabel('Distance')
+	# plt.ylabel('Probability(100%)')
+	# plt.title(r'Histogram of amplitude')
+
+	# plt.show()
+
 
 	if len(bf) == 0:
 		return 0

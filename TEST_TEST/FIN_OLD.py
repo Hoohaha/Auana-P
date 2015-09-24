@@ -1,6 +1,6 @@
 import numpy as np
 import wave, struct, os
-
+import time
 ###########################################################################
 #Global Parameters
 #Default FFT Size: How many data in FFT process, this value must be 2^n. 
@@ -93,31 +93,36 @@ def get_fingerprint(wdata,framerate):
 
 		subfin = 0
 
-		for n in range(0, DEF_FIN_BIT):
-			#BandTable look-up
-			#use a BandTable to improve the speed of computation
+ 		for n in xrange(1,DEF_FIN_BIT): 
+ 			p1 = 0 
+			p2 = 0 
+
+			#BandTable look-up 
+ 			#use a BandTable to improve the speed of calculate 
 			b0 = BandTable[n][0]
-			b1 = BandTable[n][1]
+ 			b1 = BandTable[n][1]
+ 
+ 
+ 			for b in xrange(b0,b1+1): 
+ 				#calculate the Audio center of mass  
+ 				fp = xfp[b] 
+ 				p1 += fp*b 
+ 				p2 += fp 
+ 
+ 
+	 		#Quantization 
+			if p1/p2-(b0+b1)/2 >= 0: 
+				subfin = subfin | (1<<n) 
 
-			max_fp = 0
-			max_b  = 0
-
-			for b in range(b0,b1):
-
-				#Compute the max frequency value
-				if (xfp[b]  >  max_fp):
-					max_fp = xfp[b]
-					max_b  = b
-
-			#generate the fingerprint
-			if (max_b - (b0+b1)/2 > 0):
-				subfin |= 1<<n
 
 		fin_array.append(subfin)
 
 	fin_array = np.array(fin_array,dtype = np.uint32)
 
 	return fin_array
+
+
+
 
 
 def _hann(M, sym=True):
@@ -153,6 +158,7 @@ def hamming_weight(x):
 	return x & 0x7f
 
 def GET(path):
+	start = time.time()
 	wf = wave.open(path, 'rb')#"E:\\Auana-P\\1-broken.wav" "E:\\FFOutput\\b.wav"
 	params = wf.getparams()
 	nchannels, sampwidth, framerate, nframes = params[:4]
@@ -163,7 +169,7 @@ def GET(path):
 	wave_data.shape = -1,2
 	wave_data = wave_data.T #transpose multiprocessing.Process
 
-	return get_fingerprint(wave_data[0],22050)
+	return get_fingerprint(wave_data[0],framerate)
 
 
 
@@ -182,35 +188,45 @@ def lbrate(a, b, dp):
 
 def compare_x(f1, f2, dp=False):
 	a = GET(f1)
+	s = time.time()
 	b = GET(f2)
+	e = time.time()
+	# print "time:",e-s
 	rate = lbrate(a,b,dp)
 
-	print rate
 	return rate
 
 
 
-import matplotlib.pyplot as plt
+def noise_test():
 
-plt.title("Diagram")
-plt.xlabel('Noise')
-plt.ylabel('Fault rate')
+	print compare_x("1-sample.wav","5.wav")
+	print compare_x("1-sample.wav","10.wav")
+	print compare_x("1-sample.wav","15.wav")
+	print compare_x("1-sample.wav","20.wav")
+	print compare_x("1-sample.wav","25.wav")
+	print compare_x("1-sample.wav","30.wav")
+	print compare_x("1-sample.wav","35.wav")
+	print compare_x("1-sample.wav","40.wav")
+
+
+
+
+def fft_size_test():
+	print compare_x("1-sample.wav","f_noise_25.wav")
+
+def time_test():
+	t = []
+	t.append(GET("1.wav"))
+	t.append(GET("2.wav"))
+	t.append(GET("3.wav"))
+	t.append(GET("4.wav"))
+	t.append(GET("5.wav"))
+	t.append(GET("6.wav"))
+	print t
+
+
 
 print ("OLD --- OLD")
-
-rate = []
-rate.append (compare_x("1-sample.wav","b_noise_5.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_10.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_15.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_20.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_25.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_30.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_35.wav"))
-rate.append (compare_x("1-sample.wav","b_noise_40.wav"))
-
-x = [5, 10, 15, 20, 25, 30, 35, 40]
-plt.plot(x,rate)
-plt.show()
-
-print ("OLD --- OLD")
+noise_test()
 os.system("pause")

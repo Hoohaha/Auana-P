@@ -73,7 +73,11 @@ BandTable_2 = [[0 ,   16], [8  ,  25], [16 ,  34], [25 ,  44],
 			   [390, 453], [420, 488], [453, 524], [488, 563], 
 			   [524, 605], [563, 648], [605, 694], [648, 743]]
 
-
+BandTable_3 = [(0, 4), (2, 6), (4, 8), (6, 11), (8, 13), (11, 16), 
+				(13, 19), (16, 22), (19, 25), (22, 29), (25, 33), (29, 36), (33, 40),
+				(36, 45), (40, 49), (45, 54), (49, 59), (54, 65), (59, 71), (65, 77), 
+				(71, 83), (77, 90), (83, 98), (90, 105), (98, 113), (105, 122), (113, 131), 
+				(122, 141), (131, 151), (141, 162), (151, 174), (162, 186)]
 
 def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	'''
@@ -139,12 +143,12 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	#offset     : window move offset
 	#fault_tolerant: How many fault bits in a 32-bit fingerprints
 
-	if tlen < 90:
-	 	window_size, offset, fault_tolerant = 4,   1,  12
-	elif 90 <= tlen <= 900:
-		window_size, offset, fault_tolerant = 16,  1,  13
-	else:
-		window_size, offset, fault_tolerant = 128, 2,  13
+	# if tlen < 90:
+	#  	window_size, offset, fault_tolerant = 4,   1,  12
+	# elif 90 <= tlen <= 900:
+	window_size, offset, fault_tolerant = 4,   1,  15
+	# else:
+	# 	window_size, offset, fault_tolerant = 128, 2,  13
 
 
 	compare_config = COMPARE_PARAMETERS()
@@ -256,13 +260,15 @@ def get_fingerprint(wdata,framerate):
 	data_len = wdata.shape[-1]
 
 	#hanning window
-	hanning = _hann(DEF_FFT_SIZE, sym=0)
+	hanning = hann(DEF_FFT_SIZE, sym=0)
 
 	#divide the frequency sub-band
 	if (framerate==44100 and DEF_FFT_SIZE==4096) or(framerate==22050 and DEF_FFT_SIZE==2048):
 		BandTable = BandTable_1
 	elif (framerate==22050 and DEF_FFT_SIZE==4096):
 		BandTable = BandTable_2
+	elif (framerate==22050 and DEF_FFT_SIZE==1024):
+		BandTable = BandTable_3
 	else:
 		#compute Band table
 		BandTable = []

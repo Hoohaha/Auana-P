@@ -1,7 +1,7 @@
 import wave, os
 from auana.broframe  import detect_broken_frame
 from auana.recognize import recognize, get_fingerprint, __PATH
-from auana.frequency import compute_volume, compute_thd
+from auana.frequency import compute_volume, compute_thdn
 
 try:
 	import cPickle as pickle
@@ -336,7 +336,9 @@ class WaveForm:
 		return compute_volume(self.data[ch], self.framerate)
 
 	def get_THD(self, ch=0):
-		return compute_thd(self.data[Ch],self.framerate)
+		if self.channels == 1:
+			return compute_thdn(self.data,self.framerate)
+		return compute_thdn(self.data[ch],self.framerate)
 
 
 

@@ -12,7 +12,7 @@ print " Mic Recognition Demo\n"
 
 
 storage = Storage()
-w = WaveForm(storage)
+w = storage.Open()
 
 chunk = 1024
 channels = 2
@@ -57,7 +57,7 @@ for i in Time:
     w.data = wave_data
 
     start = time.time()
-    name, confidence, db, position = w.recognize()
+    name, confidence, position = w.recognize()
     end = time.time() - start
 
     if name is not None:
