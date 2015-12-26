@@ -15,7 +15,7 @@ except ValueError:
 # x = 32767*np.sin(2*np.pi*1000*t)+50*np.sin(2*np.pi*10*t)
 # wf=WaveForm(44100,x,channels=1)
 
-wf = Open("C:/Users/solof/Desktop/Auana-P/122.wav")
+wf = Open("C:\Users\solof\Desktop\Auana-P\sine/normal.wav")
 
 
 # wf.hear()
@@ -25,4 +25,4 @@ wf = Open("C:/Users/solof/Desktop/Auana-P/122.wav")
 # print wf.recognize(Mono=True,Ch=0)
 # print wf.detect_broken_frame()
 # print wf.get_volume()
-print wf.get_THD(ch=0)
+print wf.get_thdn(ch=0)

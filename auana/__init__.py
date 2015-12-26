@@ -335,10 +335,10 @@ class WaveForm:
 	def get_volume(self, ch=0):
 		return compute_volume(self.data[ch], self.framerate)
 
-	def get_THD(self, ch=0):
+	def get_thdn(self, ch=0, base_frq=1000,t=1):
 		if self.channels == 1:
-			return compute_thdn(self.data,self.framerate)
-		return compute_thdn(self.data[ch],self.framerate)
+			return compute_thdn(self.data,self.framerate, base_frq,t)
+		return compute_thdn(self.data[ch],self.framerate, base_frq,t)
 
 
 

@@ -146,7 +146,7 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 	# if tlen < 90:
 	#  	window_size, offset, fault_tolerant = 4,   1,  12
 	# elif 90 <= tlen <= 900:
-	window_size, offset, fault_tolerant = 4,   1,  15
+	window_size, offset, fault_tolerant = 4,   1,  20
 	# else:
 	# 	window_size, offset, fault_tolerant = 128, 2,  13
 
@@ -191,16 +191,19 @@ def recognize(MaxID,wdata,framerate,channel,datapath,Fast=None):
 			sdata,slen = get_reference_data(index)
 			accuracy,position = compare(sdata, tdata, tlen, slen, compare_config)
 			#Filter: if accuracy more than 50%, that is to say the it is same with the reference
-			if accuracy >= 0.5:
-				match_index    = index
-				max_accuracy   = accuracy
-				match_position = position
-				break
+
+			if accuracy < 0.1:
+				continue
 			#Filter: find the max accuracy, and return
 			elif accuracy > max_accuracy:
 				match_index    = index
 				max_accuracy   = accuracy
 				match_position = position
+			elif accuracy >= 0.4:
+				match_index    = index
+				max_accuracy   = accuracy
+				match_position = position
+				break
 
 	#transfer to time scale
 	match_position = match_position * (DEF_FFT_SIZE * DEF_OVERLAP) / framerate

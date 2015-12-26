@@ -62,7 +62,7 @@ def detect_broken_frame(wdata, framerate):
 	AMP_THRESHOLD = 0.4
 	up_edge       = False
 
-	print framerate
+	# print framerate
 
 	w    = int(framerate*FRAME_LENGTH)
 
