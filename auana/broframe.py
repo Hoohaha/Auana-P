@@ -59,7 +59,7 @@ def detect_broken_frame(wdata, framerate):
 
 	# frame length: 5ms
 	FRAME_LENGTH  = 0.005
-	AMP_THRESHOLD = 0.4
+	AMP_THRESHOLD = 4
 	up_edge       = False
 
 	# print framerate
@@ -71,6 +71,7 @@ def detect_broken_frame(wdata, framerate):
 	last_dis = 0
 
 	AMP_ARRAY = []
+	n = 0
 
 	for i in  xrange(len(wdata)/w):
 
@@ -81,40 +82,37 @@ def detect_broken_frame(wdata, framerate):
 		else:
 			amp = 0
 
-		# if i>0:
-		# 	dis = abs(amp - amp0)
-		# 	AMP_ARRAY.append(dis)
-		# amp0 = amp
-
-		AMP_ARRAY.append(amp)
-
-
 		#Up edge detection
 		if up_edge is False:
 			dis  = amp1-amp
-			ldis = amp0-amp1
+			ldis = amp0-amp
 
-			if (dis > AMP_THRESHOLD) and (dis-ldis>=0.1):# and (distance1 > 0):#AMP_THRESHOLD-0.2
+			if (dis >= AMP_THRESHOLD) and (ldis>=AMP_THRESHOLD):# and (distance1 > 0):#AMP_THRESHOLD-0.2
 				bft = round((i*w)/float(framerate),3)
 				up_edge = True
+				n = 0
 
 		#Falling edge detection
 		else:
+			n += 1
 			dis = amp1-amp0
-			ldis = amp1-amp
+			ldis = amp-amp0
 
-			if (dis > AMP_THRESHOLD) and (dis-ldis>=0.09):#AMP_THRESHOLD-0.2  (distance0 > 0) and 
+			if (dis >= AMP_THRESHOLD) and (ldis>=AMP_THRESHOLD):#AMP_THRESHOLD-0.2  (distance0 > 0) and 
 				# print dis-ldis,i,amp0,amp1,amp
 				up_edge = False
+				n = 0
 				bf.append(bft)
 
 			#if detect a falling edge, but it can`t detect a up edge within 5 seconds, we will reset the FLAG
-			elif i%100 == 0:
+			elif n%400 == 0:
+				n = 0
 				up_edge = False
 
 
 		#Update amp0 & amp1
-		amp0,amp1=amp1,amp
+		amp0 = amp1
+		amp1 = amp
 
 
 		# #Up edge detection

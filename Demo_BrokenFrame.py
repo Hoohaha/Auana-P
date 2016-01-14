@@ -17,8 +17,8 @@ if __name__ == '__main__':
 
 	bf = w.detect_broken_frame()
 
-	print ("left  channel:", bf["left"])
-	print ("right channel:", bf["right"])
+	print ("left  channel:", len(bf["left"]),bf["left"])
+	print ("right channel:", len(bf["right"]),bf["right"])
 
 
 	os.system("pause")
