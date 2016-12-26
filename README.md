@@ -10,7 +10,7 @@ Auana support microphone records and file analysis. File analysis only support "
 
 Except using for recognitions, it will more focus on audio signal analysis. 
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
-So for the automation of audio validation, it may be a good idea. It is still in developing. Any comments, suggestions welcomed. My Email: solo.footprint@foxmail.com.
+So for the automation of audio validation, it may be a good idea. It is still in developing. Any comments, suggestions welcomed. My Email: hui.g@foxmail.com.
 
 ##Requirments:
 -----------------------------------
@@ -72,7 +72,7 @@ Custom settings:
 ```python
 #Custom framerate: 16000.
 try:
-    Crate(framerate=1600)
+    Create(framerate=1600)
 except ValueError:
     pass
 ```
@@ -80,7 +80,7 @@ except ValueError:
 ```python
 #Custom data path.
 try:
-    Crate(path="C:/data")
+    Create(path="C:/data")
 except ValueError:
     pass
 ```
@@ -89,7 +89,7 @@ except ValueError:
 ```python
 #Custom framerate and data path.
 try:
-    Crate(framerate=16000, path="C:/data")
+    Create(framerate=16000, path="C:/data")
 except ValueError:
     pass
 ```
