@@ -8,6 +8,8 @@ Auana is a open source, free and light tool with the audio recognition and basic
 It was designed by python and c(core algorithm). So it is fast enough, it can easily find the simialr references which it heared before, the progress just like human. And also it will tell the user the position where the songs is playing. 
 Auana support microphone records and file analysis. File analysis only support "wav" file for now. In addition, it also provide the functions: Broken-Frame detection and Volume value detection.<br>
 
+
+
 Except using for recognitions, it will more focus on audio signal analysis. 
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
 So for the automation of audio validation, it may be a good idea. It is still in developing. Any comments, suggestions welcomed. My Email: hui.g@foxmail.com.
@@ -19,7 +21,7 @@ So for the automation of audio validation, it may be a good idea. It is still in
 *  [pyaudio](http://people.csail.mit.edu/hubert/pyaudio/) --- Audio record and play, Option.<br />
 
 ## Features:
------------------------------------
+-----
 >1.Broken-frame detection                                      [support]<br>
 >2.Sound recognition                                           [support]<br>
 >3.Volume value computation                                    [support]<br>
@@ -30,7 +32,7 @@ So for the automation of audio validation, it may be a good idea. It is still in
 
 
 ## Quickly Start
------------------------------------
+----
 ### 1.Storage
 The class Storage is a data management. If you want to use the recognition, you must create a storage and init it.<br>
 
