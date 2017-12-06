@@ -1,7 +1,7 @@
 Auana-P Version 0.6
 
 
-#Auana-P:Audio Analysis algorithm Python Package<br>
+# Auana-P:Audio Analysis algorithm Python Package<br>
 ########################
 
 Auana is a open source, free and light tool with the audio recognition and basic analysis algorithms. It try to provide a professional audio recognition solutions for python. <br>
@@ -12,13 +12,13 @@ Except using for recognitions, it will more focus on audio signal analysis.
 At the begaining, Auana is designed for audio validition. It is so boring to check the musics/songs by manually.  
 So for the automation of audio validation, it may be a good idea. It is still in developing. Any comments, suggestions welcomed. My Email: hui.g@foxmail.com.
 
-##Requirments:
+## Requirments:
 -----------------------------------
 *  [python2.7](https://www.python.org/)  ---  32-bit only.<br />
 *  [numpy](http://www.numpy.org/)  --- Mathmatic.<br />
 *  [pyaudio](http://people.csail.mit.edu/hubert/pyaudio/) --- Audio record and play, Option.<br />
 
-##Features:
+## Features:
 -----------------------------------
 >1.Broken-frame detection                                      [support]<br>
 >2.Sound recognition                                           [support]<br>
@@ -29,9 +29,9 @@ So for the automation of audio validation, it may be a good idea. It is still in
 >7.Detect noise                                                [will]<br>
 
 
-##Quickly Start
+## Quickly Start
 -----------------------------------
-###1.Storage
+### 1.Storage
 The class Storage is a data management. If you want to use the recognition, you must create a storage and init it.<br>
 
 +  **__init__(path=DEFAULT_DATA_PATH)**<br \>
@@ -39,7 +39,7 @@ The class Storage is a data management. If you want to use the recognition, you 
   DEFAULT_DATA_PATH = "./data"
 
 
-####1) Functions.
+#### 1) Functions.
 
 +  **query(file)**:<br \>
 query the file if was saved in storage.<br \>
@@ -58,7 +58,7 @@ query the file if was saved in storage.<br \>
 *file*: file path.<br \>
 
 
-####2) Create a new storage.
+#### 2) Create a new storage.
 Create a new storage to store the data. The defalut settings: framerate is 22500, data path is ../data.
 Use the default configuration, see the following example.
 ```python
