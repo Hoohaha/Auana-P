@@ -3,7 +3,3 @@ pipeline:
     image: python:3.5
     commands:
       - python --version
-  notify:  
-    email:
-      recipients:
-        - hui.guo@nxp.com
