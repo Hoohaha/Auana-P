@@ -1,7 +1,5 @@
 #include "Compare.h"
 
-
-
 /*!
  * @brief Hamming weight
  *
