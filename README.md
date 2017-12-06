@@ -1,8 +1,8 @@
 Auana-P Version 0.6
 
 
-# Auana-P:Audio Analysis algorithm Python Package<br>
-########################
+# Auana-P:Audio Analysis algorithm Python Package
+
 
 Auana is a open source, free and light tool with the audio recognition and basic analysis algorithms. It try to provide a professional audio recognition solutions for python. <br>
 It was designed by python and c(core algorithm). So it is fast enough, it can easily find the simialr references which it heared before, the progress just like human. And also it will tell the user the position where the songs is playing. 
