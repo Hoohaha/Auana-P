@@ -8,7 +8,7 @@ from auana import Storage, WaveForm
 
 
 
-print ("Title: Mic Recognition Demo")
+print ("Title: Mic Recognition Demo    ")
 
 pa      = PyAudio()
 storage = Storage()
