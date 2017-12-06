@@ -8,13 +8,11 @@ except ValueError:
 
 
 
-
-
 # s = Storage()
 # # s.items()
 # framerate = s.get_framerate()
 
-# print framerate
+# print framerateiii
 # fs = 44100
 # t = np.arange(0, 1, 1.0/fs)
 # x = 32767*np.sin(2*np.pi*1000*t)+50*np.sin(2*np.pi*10*t)
