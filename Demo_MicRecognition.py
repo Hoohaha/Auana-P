@@ -5,6 +5,9 @@ import numpy as np
 
 from auana import Storage, WaveForm
 
+
+
+
 print ("Title: Mic Recognition Demo")
 
 pa      = PyAudio()
